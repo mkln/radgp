@@ -70,7 +70,8 @@ void matern_halfint_inplace(arma::mat& res,
 void powerexp_inplace(arma::mat& res, 
                       const arma::mat& coords,
                       const arma::uvec& ix, const arma::uvec& iy, 
-                      const double& phi, const double& nu, const double& sigmasq, const double& reparam,
+                      const double& phi, const double& nu, 
+                      const double& sigmasq, const double& nugg, const double& reparam,
                       bool same){
   
   double sigmasq_reparam = sigmasq / reparam;
@@ -84,7 +85,7 @@ void powerexp_inplace(arma::mat& res,
         if(hnuphi > 0.0){
           res(i, j) = exp(-hnuphi) * sigmasq_reparam;
         } else {
-          res(i, j) = sigmasq_reparam;
+          res(i, j) = sigmasq_reparam + nugg;
         }
       }
     }
@@ -98,16 +99,11 @@ void powerexp_inplace(arma::mat& res,
         if(hnuphi > 0.0){
           res(i, j) = exp(-hnuphi) * sigmasq_reparam;
         } else {
-          res(i, j) = sigmasq_reparam;
+          res(i, j) = sigmasq_reparam + nugg;
         }
       }
     }
   }
-  if(nu > 1.7){
-    double nugg = 1e-6;
-    res.diag() += nugg;  
-  }
-  
 }
 
 
@@ -160,9 +156,9 @@ arma::mat Correlationf(
     
     // exponential
     double phi = theta(0);
-    double sigmasq = theta(1);
-    //double sigmasq = theta(2);
-    double nu = 1;
+    double nu = theta(1);
+    double sigmasq = theta(2);
+    double nugg = theta(3);
     
     double reparam = 1.0; 
     
@@ -170,7 +166,7 @@ arma::mat Correlationf(
       reparam = pow(phi, .0 + 1);
     }
     
-    powerexp_inplace(res, coords, ix, iy, phi, nu, sigmasq, reparam, same);
+    powerexp_inplace(res, coords, ix, iy, phi, nu, sigmasq, nugg, reparam, same);
     return res;
     
   } else {

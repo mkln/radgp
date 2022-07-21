@@ -13,15 +13,34 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // altdaggp
-Rcpp::List altdaggp(const arma::mat& coords, const arma::vec& theta, double rho);
-RcppExport SEXP _altdag_altdaggp(SEXP coordsSEXP, SEXP thetaSEXP, SEXP rhoSEXP) {
+Rcpp::List altdaggp(const arma::vec& y, const arma::mat& coords, const arma::vec& theta, double rho);
+RcppExport SEXP _altdag_altdaggp(SEXP ySEXP, SEXP coordsSEXP, SEXP thetaSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type coords(coordsSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    rcpp_result_gen = Rcpp::wrap(altdaggp(coords, theta, rho));
+    rcpp_result_gen = Rcpp::wrap(altdaggp(y, coords, theta, rho));
+    return rcpp_result_gen;
+END_RCPP
+}
+// altdaggp_response
+Rcpp::List altdaggp_response(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds);
+RcppExport SEXP _altdag_altdaggp_response(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type coords(coordsSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type theta_init(theta_initSEXP);
+    Rcpp::traits::input_parameter< double >::type metrop_sd(metrop_sdSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type theta_unif_bounds(theta_unif_boundsSEXP);
+    rcpp_result_gen = Rcpp::wrap(altdaggp_response(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -115,7 +134,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_altdag_altdaggp", (DL_FUNC) &_altdag_altdaggp, 3},
+    {"_altdag_altdaggp", (DL_FUNC) &_altdag_altdaggp, 4},
+    {"_altdag_altdaggp_response", (DL_FUNC) &_altdag_altdaggp_response, 8},
     {"_altdag_Correlationc", (DL_FUNC) &_altdag_Correlationc, 5},
     {"_altdag_gpkernel", (DL_FUNC) &_altdag_gpkernel, 2},
     {"_altdag_make_candidates", (DL_FUNC) &_altdag_make_candidates, 4},

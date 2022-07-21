@@ -15,17 +15,23 @@ using namespace std;
 class AltDAG {
 public:
   int nr;
+  arma::vec y;
   arma::vec w;
   arma::mat coords;
   double rho;
   
   Eigen::SparseMatrix<double> H;
   
+  void logdens(const arma::vec& theta);
   void make_precision(const arma::vec& theta);
   
   arma::field<arma::uvec> dag;
   
-  AltDAG(const arma::mat& coords, double rho);
+  double ldens;
+  
+  AltDAG(
+    const arma::vec& y,
+    const arma::mat& coords, double rho);
   
   // utils
   arma::uvec oneuv;
