@@ -61,10 +61,10 @@ arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho){
     if(i == 0){
       try_ids = indsort.rows(i+1, rightx);
     } else if(i == nr - 1){
-        try_ids = indsort.rows(left, i-1);
+      try_ids = indsort.rows(left, i-1);
     } else {
-        try_ids = arma::join_vert(indsort.rows(left, i-1),
-                                  indsort.rows(i+1, rightx));
+      try_ids = arma::join_vert(indsort.rows(left, i-1),
+                                indsort.rows(i+1, rightx));
     }
     
     int ni = try_ids.n_elem;
@@ -141,7 +141,7 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset){
       int x = Rset(i)(jx);
       layers_ne(jx) = layers(x);
     }
-  
+    
     Nset(i) = Rset(i)(arma::find(layers_ne<layers(i)));
   }
   return Nset;
