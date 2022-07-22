@@ -8,11 +8,23 @@ AltDAG::AltDAG(
   coords = coords_in;
   nr = coords.n_rows;
   rho = rho_in;
-  dag = altdagbuild(coords, rho);
-  oneuv = arma::ones<arma::uvec>(1);
   
+  dag = altdagbuild(coords, rho, M);
+  oneuv = arma::ones<arma::uvec>(1);
 }
 
+AltDAG::AltDAG(
+  const arma::vec& y_in,
+  const arma::mat& coords_in, 
+  const arma::field<arma::uvec>& custom_dag){
+  y = y_in;
+  coords = coords_in;
+  nr = coords.n_rows;
+  rho = -1;
+  
+  dag = custom_dag;
+  oneuv = arma::ones<arma::uvec>(1);
+}
 
 void AltDAG::logdens(const arma::vec& theta){
   
@@ -37,8 +49,10 @@ void AltDAG::logdens(const arma::vec& theta){
       CC - CPt.t() * ht ));
     
     double ycore = arma::conv_to<double>::from((y(i) - ht.t() * y(px))/sqrtR);
+    
     logdetvec(i) = -sqrtR;
     logdensvec(i) = -.5 * ycore*ycore;
+    
   }
   
   ldens = arma::accu(logdetvec) + arma::accu(logdensvec);
@@ -46,7 +60,6 @@ void AltDAG::logdens(const arma::vec& theta){
 
 
 void AltDAG::make_precision(const arma::vec& theta){
-  
   typedef Eigen::Triplet<double> T;
   std::vector<T> tripletList_H;
   
@@ -59,16 +72,16 @@ void AltDAG::make_precision(const arma::vec& theta){
   for(int i=0; i<nr; i++){
     arma::uvec ix = oneuv * i;
     arma::uvec px = dag(i);
-    
+  
     arma::mat CC = Correlationf(coords, ix, ix, 
-                     theta, false, true);
+                                theta, false, true);
     arma::mat CPt = Correlationf(coords, px, ix, theta, false, false);
     arma::mat PPi = 
       arma::inv_sympd( Correlationf(coords, px, px, theta, false, true) );
     
     arma::vec ht = PPi * CPt;
     double sqrtR = sqrt( arma::conv_to<double>::from(
-        CC - CPt.t() * ht ));
+      CC - CPt.t() * ht ));
     
     tripletList_H.push_back( T(i, i, 1.0/sqrtR) );
     for(unsigned int j=0; j<dag(i).n_elem; j++){

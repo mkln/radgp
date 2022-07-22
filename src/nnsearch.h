@@ -8,8 +8,8 @@ arma::umat make_candidates(const arma::mat& w, const arma::uvec& indsort,
 
 arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho);
   
-arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset);
+arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, int& M);
 
-arma::field<arma::uvec> altdagbuild(const arma::mat& w, double rho);
+arma::field<arma::uvec> altdagbuild(const arma::mat& w, double rho, int& M);
 
 arma::umat sparse_struct(const arma::field<arma::uvec>& dag, int nr);

@@ -17,10 +17,6 @@ arma::umat make_candidates(const arma::mat& w, const arma::uvec& indsort,
   //Rcpp::Rcout << "hey " << nr << endl;
   
   for(unsigned int loc = 0; loc<nr; loc++){
-    //Rcpp::Rcout << "loc: " << loc << endl;
-    //Rcpp::Rcout << arma::size(wsort) << endl;
-    //Rcpp::Rcout << "left: " << left << endl;
-    
     while(wsort(loc) - wsort(left) > rho){
       left ++;
       //Rcpp::Rcout << "left: " << left << endl;
@@ -79,9 +75,10 @@ arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho){
 }
 
 //[[Rcpp::export]]
-arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset){
+arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, int& M){
   int nr = Rset.n_elem;
-  int M = 1;
+  
+  M = 1;
   arma::uvec layers = arma::zeros<arma::uvec>(nr);
   arma::field<arma::uvec> R_layers(nr);
   
@@ -148,9 +145,9 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset){
 }
 
 //[[Rcpp::export]]
-arma::field<arma::uvec> altdagbuild(const arma::mat& w, double rho){
+arma::field<arma::uvec> altdagbuild(const arma::mat& w, double rho, int& M){
   arma::field<arma::uvec> Rset = neighbor_search(w, rho);
-  return dagbuild_from_nn(Rset);
+  return dagbuild_from_nn(Rset, M);
 }
 
 //[[Rcpp::export]]

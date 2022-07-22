@@ -2,13 +2,17 @@
 #define ALTDAG
 
 // uncomment to disable openmp on compilation
-//#undef _OPENMP
-
 #include "RcppArmadillo.h"
 #include <RcppEigen.h>
 //#include <Eigen/CholmodSupport>
 #include "nnsearch.h"
 #include "covariance_lmc.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+//#undef _OPENMP
 
 using namespace std;
 
@@ -18,6 +22,9 @@ public:
   arma::vec y;
   arma::vec w;
   arma::mat coords;
+  
+  int type; // 1=altdag, 2=nn maxmin order
+  int M;
   double rho;
   
   Eigen::SparseMatrix<double> H;
@@ -29,9 +36,11 @@ public:
   
   double ldens;
   
-  AltDAG(
-    const arma::vec& y,
+  AltDAG(const arma::vec& y,
     const arma::mat& coords, double rho);
+  AltDAG(const arma::vec& y,
+         const arma::mat& coords, 
+         const arma::field<arma::uvec>& custom_dag);
   
   // utils
   arma::uvec oneuv;
