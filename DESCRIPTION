@@ -1,11 +1,11 @@
 Package: altdag
 Type: Package
-Title: What the package does (short line)
-Version: 1.0
+Title: Markov-chain Monte Carlo estimation of Alternating Partition DAG Gaussian Process
+Version: 0.0.1
 Date: 2022-07-16
 Author: Michele Peruzzi, Yichen Zhu
 Maintainer: Michele Peruzzi <michele.peruzzi@duke.edu>
-Description: More about what it does (maybe more than one line)
+Description: Markov-chain Monte Carlo estimation of Alternating Partition DAG Gaussian Process. This package currently implements a response model using the AltDAG.
 License: What license is it under?
 Imports: Rcpp (>= 1.0.8.3)
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen
