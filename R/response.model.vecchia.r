@@ -1,5 +1,17 @@
-maxmin_mcmc <- function(y, coords, m, mcmc, n_threads,
-                        theta_start, metrop_sd, unif_bounds){
+response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
+                                   theta_start=NULL, unif_bounds=NULL){
+  
+  if(is.null(theta_start)){
+    theta_start <- c(5,  1, 1)  
+  }
+  
+  if(is.null(unif_bounds)){
+    unif_bounds <- matrix(nrow=3, ncol=2)
+    unif_bounds[,1] <- 1e-3
+    unif_bounds[,2] <- 30
+  }
+  
+  metrop_sd <- 0.15
   
   ixmm <- GPvecchia::order_maxmin_exact(coords)
   coords_mm <- coords[ixmm,]
@@ -11,11 +23,8 @@ maxmin_mcmc <- function(y, coords, m, mcmc, n_threads,
     response_model <- altdaggp_custom(y_mm, coords_mm, nn_dag, mcmc, n_threads,
                                       theta_start, metrop_sd, unif_bounds) })
   
-  return(list(
-    theta=response_model$theta,
-    ldens=response_model$ldens,
+  return(c(response_model, list(
     dag=nn_dag,
-    ord=ixmm,
-    timing=maxmin_time["elapsed"]
-  ))
+    ord=ixmm
+  )))
 }

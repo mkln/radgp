@@ -6,7 +6,9 @@
 #include <RcppEigen.h>
 //#include <Eigen/CholmodSupport>
 #include "nnsearch.h"
-#include "covariance_lmc.h"
+#include "covariance.h"
+#include "interrupt.h"
+
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -29,12 +31,12 @@ public:
   
   Eigen::SparseMatrix<double> H;
   
-  void logdens(const arma::vec& theta);
+  double logdens(const arma::vec& theta);
   void make_precision(const arma::vec& theta);
   
   arma::field<arma::uvec> dag;
   
-  double ldens;
+  //double ldens;
   
   AltDAG(const arma::vec& y,
     const arma::mat& coords, double rho);

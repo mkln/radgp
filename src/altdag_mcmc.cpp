@@ -1,20 +1,11 @@
 #define ARMA_DONT_PRINT_ERRORS
-#include "R.h"
 #include <RcppArmadillo.h>
 
 #include "altdag.h"
+#include "predict.h"
 #include "rama.h"
 
 using namespace std;
-
-inline static void chkIntFn(void *dummy) {
-  R_CheckUserInterrupt();
-}
-
-// this will call the above in a top-level context so it won't longjmp-out of your context
-inline bool checkInterrupt() {
-  return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
-}
 
 
 //[[Rcpp::export]]
@@ -27,11 +18,11 @@ Rcpp::List altdaggp(const arma::mat& coords,
   
   adag.make_precision(theta);
 
-  adag.logdens(theta);
+  double ldens = adag.logdens(theta);
   
   return Rcpp::List::create(
     Rcpp::Named("dag") = adag.dag,
-    Rcpp::Named("ldens") = adag.ldens,
+    Rcpp::Named("ldens") = ldens,
     Rcpp::Named("H") = adag.H
   );
 }
@@ -56,14 +47,13 @@ void response_mcmc(AltDAG& adag,
   
   int nt = theta.n_elem;
   arma::mat metrop_theta_sd = metrop_sd * arma::eye(nt, nt);
-  
+
   // RAMA for theta
   int theta_mcmc_counter = 0;
   RAMAdapt theta_adapt(nt, metrop_theta_sd, 0.24); // +1 for tausq
   bool theta_adapt_active = true;
   
-  adag.logdens(theta);
-  double current_logdens = adag.ldens;
+  double current_logdens = adag.logdens(theta);
   
   theta_mcmc = arma::zeros(nt, mcmc);
   logdens_mcmc = arma::zeros(mcmc);
@@ -77,11 +67,11 @@ void response_mcmc(AltDAG& adag,
     arma::vec new_param = par_huvtransf_back(par_huvtransf_fwd(theta, theta_unif_bounds) + 
       theta_adapt.paramsd * U_update, theta_unif_bounds);
     
-    adag.logdens(new_param);
-    double proposal_logdens = adag.ldens;
+    double proposal_logdens = adag.logdens(new_param);
     
-    double prior_logratio = 0;
-    double jacobian  = calc_jacobian(new_param, theta, theta_unif_bounds);
+    double prior_logratio = 
+      calc_prior_logratio(new_param.subvec(1,2), theta.subvec(1,2)); // ig
+    double jacobian = calc_jacobian(new_param, theta, theta_unif_bounds);
     
     double logaccept = proposal_logdens - current_logdens + 
       prior_logratio + jacobian;
@@ -91,7 +81,7 @@ void response_mcmc(AltDAG& adag,
       theta = new_param;
       current_logdens = proposal_logdens;
       theta_adapt.count_accepted();
-    }
+    } 
     
     theta_adapt.update_ratios();
     if(theta_adapt_active){
@@ -161,12 +151,79 @@ Rcpp::List altdaggp_response(const arma::vec& y,
 
   return Rcpp::List::create(
     Rcpp::Named("M") = adag.M,
+    Rcpp::Named("rho") = rho,
     Rcpp::Named("dag") = adag.dag,
+    Rcpp::Named("y") = y,
+    Rcpp::Named("coords") = coords,
     Rcpp::Named("ldens") = logdens_mcmc,
     Rcpp::Named("theta") = theta_mcmc
   );
 }
 
+//[[Rcpp::export]]
+Rcpp::List altdaggp_response_predict(const arma::mat& cout,
+                                     const arma::vec& y, 
+                                     const arma::mat& coords, double rho,
+                                     const arma::mat& theta_mcmc, 
+                                     int M,
+                                     int num_threads){
+  arma::uvec oneuv = arma::ones<arma::uvec>(1);
+  
+  int ntrain = coords.n_rows;
+  int ntest = cout.n_rows;
+  int mcmc = theta_mcmc.n_cols;
+  arma::mat cxall = arma::join_vert(coords, cout);
+  
+  arma::uvec layers;
+  arma::field<arma::uvec> predict_dag = 
+    altdagbuild_testset(coords, cout, rho, layers, M);
+  arma::uvec pred_order = arma::sort_index(layers);
+  
+  arma::mat yout_mcmc = arma::zeros(ntest, mcmc);
+  arma::mat random_stdnormal = arma::randn(mcmc, ntest);
+  
+  Rcpp::Rcout << "predicting " << endl;
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
+  for(int m=0; m<mcmc; m++){
+    arma::vec theta = theta_mcmc.col(m);
+    
+    arma::vec ytemp = arma::zeros(ntrain+ntest);
+    ytemp.subvec(0, ntrain-1) = y;
+    for(int i=0; i<ntest; i++){
+      
+      int itarget = pred_order(ntrain+i);
+      int idagtarget = itarget - ntrain;
+      
+      arma::uvec ix = oneuv * (itarget);
+      arma::uvec px = predict_dag(idagtarget);
+      
+      arma::mat CC = Correlationf(cxall, ix, ix, 
+                                  theta, false, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, false, false);
+      arma::mat PPi = 
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, false, true) );
+      
+      arma::vec ht = PPi * CPt;
+      double sqrtR = sqrt( arma::conv_to<double>::from(
+        CC - CPt.t() * ht ) );
+      
+      ytemp(itarget) = arma::conv_to<double>::from(
+        ht.t() * ytemp(px) + random_stdnormal(m, i) * sqrtR );
+      
+      yout_mcmc(itarget-ntrain, m) = ytemp(itarget);
+    }
+
+  }
+  
+  return Rcpp::List::create(
+    Rcpp::Named("yout") = yout_mcmc,
+    Rcpp::Named("predict_dag") = predict_dag,
+    Rcpp::Named("layers") = layers,
+    Rcpp::Named("pred_order") = pred_order
+  );
+}
 
 //[[Rcpp::export]]
 Rcpp::List altdaggp_custom(const arma::vec& y,
@@ -197,3 +254,24 @@ Rcpp::List altdaggp_custom(const arma::vec& y,
       Rcpp::Named("theta") = theta_mcmc
     );
 }
+
+
+
+//[[Rcpp::export]]
+double daggp_negdens(const arma::vec& y,
+                           const arma::mat& coords,
+                           const arma::field<arma::uvec>& dag,
+                           const arma::vec& theta,
+                           int num_threads){
+  
+  
+#ifdef _OPENMP
+  omp_set_num_threads(num_threads);
+#endif
+  
+  AltDAG adag(y, coords, dag);
+  
+  return adag.logdens(theta);
+}
+
+

@@ -1,37 +1,30 @@
-
-#include <RcppArmadillo.h>
-using namespace std;
+#include "nnsearch.h"
 
 //[[Rcpp::export]]
-arma::umat make_candidates(const arma::mat& w, const arma::uvec& indsort, 
+arma::umat make_candidates(const arma::mat& w, 
+                           const arma::uvec& indsort,
                            unsigned int col,
                            double rho){
   arma::uvec colsel = col + arma::zeros<arma::uvec>(1);
-  arma::vec wsort = w.submat(indsort, colsel);
+  //arma::vec wsort = w.submat(indsort, colsel);
   
-  int nr = wsort.n_elem;
+  int nr = indsort.n_elem;
   arma::umat candidates = arma::zeros<arma::umat>(nr, 2);
   int left = 0;
   int right = 0;
   
-  //Rcpp::Rcout << "hey " << nr << endl;
-  
   for(unsigned int loc = 0; loc<nr; loc++){
-    while(wsort(loc) - wsort(left) > rho){
+    while((w(indsort(loc), col) - w(indsort(left), col)) > rho){
       left ++;
-      //Rcpp::Rcout << "left: " << left << endl;
     }
-    //Rcpp::Rcout << "right loop " << endl;
     if(right < nr - 1){
-      while(wsort(right+1) - wsort(loc) <= rho){
+      while(w(indsort(right+1)) - w(indsort(loc)) <= rho){
         right ++;
-        //Rcpp::Rcout << "right: " << right << " " << nr-1 << endl;
         if(right == nr - 1){
           break;
         }
       }
     }
-    //Rcpp::Rcout << "candidates " << loc << endl;
     candidates(loc, 0) = left;
     candidates(loc, 1) = right;
   }
@@ -53,10 +46,10 @@ arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho){
     int right = candidates(i, 1);
     arma::uvec try_ids;
     int rightx = right==(nr-1)? nr-1 : right;
-    
-    if(i == 0){
+  
+    if((i == 0)|(i==left)){
       try_ids = indsort.rows(i+1, rightx);
-    } else if(i == nr - 1){
+    } else if((i == nr - 1)|(i==rightx)){
       try_ids = indsort.rows(left, i-1);
     } else {
       try_ids = arma::join_vert(indsort.rows(left, i-1),
@@ -70,16 +63,19 @@ arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho){
       try_dist2(j) = arma::accu(rdiff % rdiff);
     }
     Nset(indsort(i)) = try_ids.rows(arma::find(try_dist2<=rho2));
+  
+    
   }
   return Nset;
 }
 
 //[[Rcpp::export]]
-arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, int& M){
+arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, 
+                                         arma::uvec& layers, int& M){
   int nr = Rset.n_elem;
   
   M = 1;
-  arma::uvec layers = arma::zeros<arma::uvec>(nr);
+  //arma::uvec layers = arma::zeros<arma::uvec>(nr);
   arma::field<arma::uvec> R_layers(nr);
   
   std::deque<int> queue;
@@ -97,7 +93,11 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, in
           break;
         }
       }
-      M = layers(l) > M ? layers(l) : M;
+      //M = layers(l) > M ? layers(l) : M;
+      if(layers(l) > M){
+        M += 1;
+      }
+        
       for(int jx=0; jx < Rset(l).n_elem; jx++){
         int j = Rset(l)(jx);
         R_layers(j) = arma::join_vert(R_layers(j), oneuv*layers(l));
@@ -119,7 +119,11 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, in
             break;
           }
         }
-        M = layers(l) > M ? layers(l) : M;
+        //M = layers(l) > M ? layers(l) : M;
+        if(layers(l) > M){
+          M += 1;
+        }
+        
         for(int jx=0; jx<Rset(l).n_elem; jx++){
           int j = Rset(l)(jx);
           R_layers(j) = arma::join_vert(R_layers(j), oneuv*layers(l));
@@ -144,10 +148,30 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, in
   return Nset;
 }
 
-//[[Rcpp::export]]
 arma::field<arma::uvec> altdagbuild(const arma::mat& w, double rho, int& M){
+  int nr = w.n_rows;
+  arma::uvec layers = arma::zeros<arma::uvec>(nr);
+  
   arma::field<arma::uvec> Rset = neighbor_search(w, rho);
-  return dagbuild_from_nn(Rset, M);
+  arma::field<arma::uvec> dag = dagbuild_from_nn(Rset, layers, M);
+  return dag;
+}
+
+//[[Rcpp::export]]
+Rcpp::List Raltdagbuild(const arma::mat& w, double rho){
+  int nr = w.n_rows;
+  arma::uvec layers = arma::zeros<arma::uvec>(nr);
+  
+  Rcpp::Rcout << "neighbor search "<< endl;
+  arma::field<arma::uvec> Rset = neighbor_search(w, rho);
+  Rcpp::Rcout << "dag build"<< endl;
+  int M=0;
+  arma::field<arma::uvec> dag = dagbuild_from_nn(Rset, layers, M);
+  return Rcpp::List::create(
+    Rcpp::Named("dag") = dag,
+    Rcpp::Named("layers") = layers,
+    Rcpp::Named("M") = M
+  );
 }
 
 //[[Rcpp::export]]
