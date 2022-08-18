@@ -19,6 +19,8 @@ ntest <- nrow(coords_test)
 
 coords_all <- rbind(coords_train, coords_test)
 nall <- nrow(coords_all)
+y_train <- yall[1:ntrain]
+
 
 # gen data from full GP
 # theta : phi, sigmasq, nugg
@@ -44,7 +46,6 @@ df %>% head(ntrain) %>%
   scale_color_viridis_c() +
   theme_minimal()
 
-y_train <- yall[1:ntrain]
 
 ################################################################# Preliminary 
 ###############################################################################
@@ -109,7 +110,6 @@ ggplot(plot_df %>% filter(sample=="out"), aes(Var1, Var2, fill=y_high)) +
 
 
 
-
 ################################################################# MLE
 ###############################################################################
 # visualize the likelihood on a grid of phi/sigmasq fixing true tausq
@@ -145,7 +145,7 @@ mle_vecchia <- optim(c(1,.1,.1), ldens, method="L-BFGS-B", hessian=TRUE)
 # plot altdag parent sets
 par(mfrow=c(1,2))
 
-i <- 501
+i <- 1
 plot( coords_train[i,,drop=FALSE], pch=19, cex=1.2, xlim = c(0,1), ylim=c(0,1),
       xlab="x1", ylab="x2", main="ALTDAG")
 points( coords_train[dag$dag[[i]]+1,,drop=FALSE], pch=19, cex=.8, col="red" )
@@ -153,7 +153,7 @@ points( coords_train[dag$dag[[i]]+1,,drop=FALSE], pch=19, cex=.8, col="red" )
 # plot vecchia maxmin dag parent sets
 vecchia_maxmin <- maxmin_model$dag
 vecchia_ord <- maxmin_model$ord
-iv <- which(vecchia_ord == i)
+iv <- 4 #which(vecchia_ord == i)
 coords_ord <- coords_train[vecchia_ord,]
 plot( coords_ord[iv,,drop=FALSE], pch=19, cex=1.2, xlim = c(0,1), ylim=c(0,1),
       xlab="x1", ylab="x2", main="Vecchia MAXMIN")
@@ -163,6 +163,19 @@ par(mfrow=c(1,1))
 
 
 
+# partitioning of AltDAG.
+df_layers <- coords_train %>% cbind(data.frame(layers = dag$layers)) 
+colnames(df_layers) <- c("Var1", "Var2", "layers")
+
+# partitioning into layers, all colors at once
+ggplot(df_layers, aes(Var1, Var2, color=factor(layers))) +
+  geom_point() +
+  theme_minimal()
+
+# plot locations belonging to one of the layers only
+ggplot(df_layers %>% filter(layers == 2), aes(Var1, Var2, color=factor(layers))) +
+  geom_point() +
+  theme_minimal()
 
 
 
