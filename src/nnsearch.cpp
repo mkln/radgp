@@ -148,9 +148,8 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
   return Nset;
 }
 
-arma::field<arma::uvec> altdagbuild(const arma::mat& w, double rho, int& M){
+arma::field<arma::uvec> altdagbuild(const arma::mat& w, double rho, arma::uvec& layers, int& M){
   int nr = w.n_rows;
-  arma::uvec layers = arma::zeros<arma::uvec>(nr);
   
   arma::field<arma::uvec> Rset = neighbor_search(w, rho);
   arma::field<arma::uvec> dag = dagbuild_from_nn(Rset, layers, M);

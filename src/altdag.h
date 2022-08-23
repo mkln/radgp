@@ -25,6 +25,8 @@ public:
   arma::vec w;
   arma::mat coords;
   
+  arma::uvec layers;
+  
   int type; // 1=altdag, 2=nn maxmin order
   int M;
   double rho;

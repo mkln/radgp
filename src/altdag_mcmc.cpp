@@ -23,6 +23,25 @@ Rcpp::List altdaggp(const arma::mat& coords,
   return Rcpp::List::create(
     Rcpp::Named("dag") = adag.dag,
     Rcpp::Named("ldens") = ldens,
+    Rcpp::Named("H") = adag.H,
+    Rcpp::Named("layers") = adag.layers
+  );
+}
+
+
+//[[Rcpp::export]]
+Rcpp::List vecchiagp(const arma::mat& coords,
+                    const arma::vec& theta,
+                    const arma::field<arma::uvec>& dag){
+  
+  arma::vec y = arma::randn(coords.n_rows);
+  AltDAG adag(y, coords, dag);
+  adag.make_precision(theta);
+  double ldens = adag.logdens(theta);
+  
+  return Rcpp::List::create(
+    Rcpp::Named("dag") = adag.dag,
+    Rcpp::Named("ldens") = ldens,
     Rcpp::Named("H") = adag.H
   );
 }

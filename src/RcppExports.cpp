@@ -38,6 +38,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// vecchiagp
+Rcpp::List vecchiagp(const arma::mat& coords, const arma::vec& theta, const arma::field<arma::uvec>& dag);
+RcppExport SEXP _altdag_vecchiagp(SEXP coordsSEXP, SEXP thetaSEXP, SEXP dagSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type coords(coordsSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< const arma::field<arma::uvec>& >::type dag(dagSEXP);
+    rcpp_result_gen = Rcpp::wrap(vecchiagp(coords, theta, dag));
+    return rcpp_result_gen;
+END_RCPP
+}
 // altdaggp_response
 Rcpp::List altdaggp_response(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds);
 RcppExport SEXP _altdag_altdaggp_response(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP) {
@@ -240,6 +253,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_altdag_hmat_from_dag", (DL_FUNC) &_altdag_hmat_from_dag, 3},
     {"_altdag_altdaggp", (DL_FUNC) &_altdag_altdaggp, 3},
+    {"_altdag_vecchiagp", (DL_FUNC) &_altdag_vecchiagp, 3},
     {"_altdag_altdaggp_response", (DL_FUNC) &_altdag_altdaggp_response, 8},
     {"_altdag_altdaggp_response_predict", (DL_FUNC) &_altdag_altdaggp_response_predict, 7},
     {"_altdag_altdaggp_custom", (DL_FUNC) &_altdag_altdaggp_custom, 8},

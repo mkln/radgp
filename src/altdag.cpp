@@ -9,7 +9,8 @@ AltDAG::AltDAG(
   nr = coords.n_rows;
   rho = rho_in;
   
-  dag = altdagbuild(coords, rho, M);
+  layers = arma::zeros<arma::uvec>(nr);
+  dag = altdagbuild(coords, rho, layers, M);
   oneuv = arma::ones<arma::uvec>(1);
 }
 
@@ -85,6 +86,11 @@ void AltDAG::make_precision(const arma::vec& theta){
     tripletList_H.push_back( T(i, i, 1.0/sqrtR) );
     for(unsigned int j=0; j<dag(i).n_elem; j++){
       tripletList_H.push_back( T(i, dag(i)(j), -ht(j)/sqrtR) );
+    }
+    
+    bool interrupted = checkInterrupt();
+    if(interrupted){
+      Rcpp::stop("Interrupted by the user.");
     }
   }
   
