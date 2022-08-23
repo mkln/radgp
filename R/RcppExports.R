@@ -9,6 +9,10 @@ altdaggp <- function(coords, theta, rho) {
     .Call(`_altdag_altdaggp`, coords, theta, rho)
 }
 
+vecchiagp <- function(coords, theta, dag) {
+    .Call(`_altdag_vecchiagp`, coords, theta, dag)
+}
+
 altdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds) {
     .Call(`_altdag_altdaggp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds)
 }
