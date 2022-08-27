@@ -46,7 +46,7 @@ arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho){
     int right = candidates(i, 1);
     arma::uvec try_ids;
     int rightx = right==(nr-1)? nr-1 : right;
-  
+    
     if((i == 0)|(i==left)){
       try_ids = indsort.rows(i+1, rightx);
     } else if((i == nr - 1)|(i==rightx)){
@@ -63,7 +63,7 @@ arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho){
       try_dist2(j) = arma::accu(rdiff % rdiff);
     }
     Nset(indsort(i)) = try_ids.rows(arma::find(try_dist2<=rho2));
-  
+    
     
   }
   return Nset;
@@ -71,8 +71,9 @@ arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho){
 
 //[[Rcpp::export]]
 arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, 
-                                         arma::uvec& layers, int& M){
+                                         arma::uvec& layers, int& M, const arma::mat& w, double rho){
   int nr = Rset.n_elem;
+  double rho2 = rho*rho;
   
   M = 1;
   //arma::uvec layers = arma::zeros<arma::uvec>(nr);
@@ -80,6 +81,8 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
   
   std::deque<int> queue;
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
+  std::vector<int> D1;
+  D1.push_back(0);
   
   for(int i=0; i<nr; i++){
     if(!(layers(i) == 0)){
@@ -97,7 +100,7 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
       if(layers(l) > M){
         M += 1;
       }
-        
+      
       for(int jx=0; jx < Rset(l).n_elem; jx++){
         int j = Rset(l)(jx);
         R_layers(j) = arma::join_vert(R_layers(j), oneuv*layers(l));
@@ -116,6 +119,9 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
           arma::uvec found_elem = arma::find(R_layers(l) == k);
           if(found_elem.n_elem == 0){ //**
             layers(l) = k;
+            if(k==1){
+              D1.push_back(l);
+            }
             break;
           }
         }
@@ -135,8 +141,7 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
     }
   }
   arma::field<arma::uvec> Nset(nr);
-  for(int i=0; i<nr; i++){
-    
+  for(int i=0; i<nr; i++){    
     arma::uvec layers_ne(Rset(i).n_elem);
     for(int jx=0; jx<Rset(i).n_elem; jx++){
       int x = Rset(i)(jx);
@@ -145,6 +150,23 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
     
     Nset(i) = Rset(i)(arma::find(layers_ne<layers(i)));
   }
+  
+  arma::uvec D1a = arma::conv_to<arma::uvec>::from(D1);
+  for(int ni=1; ni<D1.size(); ni++){
+    arma::vec try_dist2 = arma::zeros(ni);
+    for(unsigned int j=0; j<ni; j++){
+      arma::rowvec rdiff = w.row(D1[j]) - w.row(D1[ni]);
+      try_dist2(j) = arma::accu(rdiff % rdiff);
+    }   
+    Nset(D1[ni]) = arma::join_cols(Nset(D1[ni]),D1a.elem(arma::find(try_dist2<=4*rho2)));
+  }
+  for(int ni=1; ni<D1.size(); ni++){
+    if(Nset(D1[ni]).n_elem == 0){
+      Nset(D1[ni]) = D1[ni-1];
+      // Nset(D1[ni]) = arma::uvec(1,arma::fill::value(D1[ni-1]));
+    }
+  }
+  
   return Nset;
 }
 
@@ -152,7 +174,7 @@ arma::field<arma::uvec> altdagbuild(const arma::mat& w, double rho, arma::uvec& 
   int nr = w.n_rows;
   
   arma::field<arma::uvec> Rset = neighbor_search(w, rho);
-  arma::field<arma::uvec> dag = dagbuild_from_nn(Rset, layers, M);
+  arma::field<arma::uvec> dag = dagbuild_from_nn(Rset, layers, M, w, rho);
   return dag;
 }
 
@@ -165,7 +187,7 @@ Rcpp::List Raltdagbuild(const arma::mat& w, double rho){
   arma::field<arma::uvec> Rset = neighbor_search(w, rho);
   Rcpp::Rcout << "dag build"<< endl;
   int M=0;
-  arma::field<arma::uvec> dag = dagbuild_from_nn(Rset, layers, M);
+  arma::field<arma::uvec> dag = dagbuild_from_nn(Rset, layers, M, w, rho);
   return Rcpp::List::create(
     Rcpp::Named("dag") = dag,
     Rcpp::Named("layers") = layers,

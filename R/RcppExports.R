@@ -45,8 +45,8 @@ neighbor_search <- function(w, rho) {
     .Call(`_altdag_neighbor_search`, w, rho)
 }
 
-dagbuild_from_nn <- function(Rset, layers, M) {
-    .Call(`_altdag_dagbuild_from_nn`, Rset, layers, M)
+dagbuild_from_nn <- function(Rset, layers, M, w, rho) {
+    .Call(`_altdag_dagbuild_from_nn`, Rset, layers, M, w, rho)
 }
 
 Raltdagbuild <- function(w, rho) {

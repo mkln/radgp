@@ -172,15 +172,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // dagbuild_from_nn
-arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, arma::uvec& layers, int& M);
-RcppExport SEXP _altdag_dagbuild_from_nn(SEXP RsetSEXP, SEXP layersSEXP, SEXP MSEXP) {
+arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, arma::uvec& layers, int& M, const arma::mat& w, double rho);
+RcppExport SEXP _altdag_dagbuild_from_nn(SEXP RsetSEXP, SEXP layersSEXP, SEXP MSEXP, SEXP wSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::field<arma::uvec>& >::type Rset(RsetSEXP);
     Rcpp::traits::input_parameter< arma::uvec& >::type layers(layersSEXP);
     Rcpp::traits::input_parameter< int& >::type M(MSEXP);
-    rcpp_result_gen = Rcpp::wrap(dagbuild_from_nn(Rset, layers, M));
+    Rcpp::traits::input_parameter< const arma::mat& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    rcpp_result_gen = Rcpp::wrap(dagbuild_from_nn(Rset, layers, M, w, rho));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -262,7 +264,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_altdag_gpkernel", (DL_FUNC) &_altdag_gpkernel, 2},
     {"_altdag_make_candidates", (DL_FUNC) &_altdag_make_candidates, 4},
     {"_altdag_neighbor_search", (DL_FUNC) &_altdag_neighbor_search, 2},
-    {"_altdag_dagbuild_from_nn", (DL_FUNC) &_altdag_dagbuild_from_nn, 3},
+    {"_altdag_dagbuild_from_nn", (DL_FUNC) &_altdag_dagbuild_from_nn, 5},
     {"_altdag_Raltdagbuild", (DL_FUNC) &_altdag_Raltdagbuild, 2},
     {"_altdag_sparse_struct", (DL_FUNC) &_altdag_sparse_struct, 2},
     {"_altdag_neighbor_search_testset", (DL_FUNC) &_altdag_neighbor_search_testset, 3},
