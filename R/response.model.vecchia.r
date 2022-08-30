@@ -2,13 +2,15 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
                                    theta_start=NULL, unif_bounds=NULL){
   
   if(is.null(theta_start)){
-    theta_start <- c(5,  1, 1)  
+    theta_start <- c(5, 1, 1.5, 1)  
   }
   
   if(is.null(unif_bounds)){
-    unif_bounds <- matrix(nrow=3, ncol=2)
+    unif_bounds <- matrix(nrow=4, ncol=2)
     unif_bounds[,1] <- 1e-3
     unif_bounds[,2] <- 30
+    # nu powerexp
+    unif_bounds[3,] <- c(1.001, 2-.01)
   }
   
   metrop_sd <- 0.15

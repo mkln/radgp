@@ -56,9 +56,9 @@ arma::mat Correlationf(
   arma::mat res = arma::zeros(ix.n_rows, iy.n_rows);
   
   double phi = theta(0);
-  double nu = 1.0;//theta(1);
   double sigmasq = theta(1);
-  double nugg = theta(2);
+  double nu = theta(2);
+  double nugg = theta(3);
   
   double reparam = 1.0; 
   

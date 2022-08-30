@@ -1,9 +1,9 @@
+rm(list=ls())
 library(tidyverse)
 library(magrittr)
 library(Matrix)
-library(reticulate)
+#library(reticulate)
 library(altdag)
-library(meshed)
 
 ################################################################# data
 ###############################################################################
@@ -19,18 +19,19 @@ ntest <- nrow(coords_test)
 
 coords_all <- rbind(coords_train, coords_test)
 nall <- nrow(coords_all)
-y_train <- yall[1:ntrain]
-
 
 # gen data from full GP
-# theta : phi, sigmasq, nugg
-theta <- c(4, 2, 0.02)
+# theta : phi, sigmasq, nu, nugg
+theta <- c(4, 2, 1.6, 0.02)
 
 CC <- altdag::Correlationc(coords_all, coords_all, theta, TRUE)
 LC <- t(chol(CC))
 yall <- LC %*% rnorm(nall) 
 df <- cbind(coords_all, yall) %>% as.data.frame() 
 colnames(df) <- c("Var1", "Var2", "y")
+
+y_train <- yall[1:ntrain]
+
 
 # visualize data on the gridded test set
 df %>% tail(ntest) %>% 
@@ -115,7 +116,8 @@ ggplot(plot_df %>% filter(sample=="out"), aes(Var1, Var2, fill=y_high)) +
 # visualize the likelihood on a grid of phi/sigmasq fixing true tausq
 parvals <- expand.grid(seq(1, 30, length.out=30),
                        seq(1, 5, length.out=30),
-                       theta[3])
+                       theta[3],
+                       theta[4])
 
 grid_dens <- parvals %>% apply(1, \(x) daggp_negdens(y_train, coords_train, dag$dag, as.vector(x), 16))
 df <- parvals %>% mutate(dens = grid_dens)
@@ -153,9 +155,9 @@ points( coords_train[dag$dag[[i]]+1,,drop=FALSE], pch=19, cex=.8, col="red" )
 # plot vecchia maxmin dag parent sets
 vecchia_maxmin <- maxmin_model$dag
 vecchia_ord <- maxmin_model$ord
-iv <- 4 #which(vecchia_ord == i)
+iv <- 1400 #which(vecchia_ord == i)
 coords_ord <- coords_train[vecchia_ord,]
-plot( coords_ord[iv,,drop=FALSE], pch=19, cex=1.2, xlim = c(0,1), ylim=c(0,1),
+plot( coords_ord[iv,,drop=FALSE], pch=19, cex=2, xlim = c(0,1), ylim=c(0,1),
       xlab="x1", ylab="x2", main="Vecchia MAXMIN")
 points( coords_ord[vecchia_maxmin[[iv]]+1,,drop=FALSE], pch=19, cex=.8, col="red" )
 
