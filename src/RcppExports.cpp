@@ -12,6 +12,17 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// MaxMincpp
+IntegerVector MaxMincpp(NumericMatrix locations);
+RcppExport SEXP _altdag_MaxMincpp(SEXP locationsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type locations(locationsSEXP);
+    rcpp_result_gen = Rcpp::wrap(MaxMincpp(locations));
+    return rcpp_result_gen;
+END_RCPP
+}
 // hmat_from_dag
 Eigen::SparseMatrix<double> hmat_from_dag(const arma::mat& coords, const arma::field<arma::uvec>& dag, const arma::vec& theta);
 RcppExport SEXP _altdag_hmat_from_dag(SEXP coordsSEXP, SEXP dagSEXP, SEXP thetaSEXP) {
@@ -253,6 +264,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_altdag_MaxMincpp", (DL_FUNC) &_altdag_MaxMincpp, 1},
     {"_altdag_hmat_from_dag", (DL_FUNC) &_altdag_hmat_from_dag, 3},
     {"_altdag_altdaggp", (DL_FUNC) &_altdag_altdaggp, 3},
     {"_altdag_vecchiagp", (DL_FUNC) &_altdag_vecchiagp, 3},
