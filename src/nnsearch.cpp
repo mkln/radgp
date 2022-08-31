@@ -159,6 +159,10 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
       try_dist2(j) = arma::accu(rdiff % rdiff);
     }   
     Nset(D1[ni]) = arma::join_cols(Nset(D1[ni]),D1a.elem(arma::find(try_dist2<=4*rho2)));
+    if(Nset(D1[ni]).n_elem == 0){
+      arma::uvec try_sort_id = arma::sort_index(try_dist2);
+      Nset(D1[ni]) = arma::uvec(1,arma::fill::value(D1[try_sort_id(0)]));
+    }
   }
   for(int ni=1; ni<D1.size(); ni++){
     if(Nset(D1[ni]).n_elem == 0){
@@ -166,6 +170,30 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
       // Nset(D1[ni]) = arma::uvec(1,arma::fill::value(D1[ni-1]));
     }
   }
+
+  // int s=0;
+  // for(int i=0; i<nr; i++){
+  //   s += Nset(i).n_elem;
+  // }
+  // int sr = round(s/nr);
+  // 
+  // arma::uvec D1a = arma::conv_to<arma::uvec>::from(D1);
+  // arma::mat w1 = w.rows(D1a);
+  // NumericMatrix wn = wrap(w1);
+  // arma::uvec ord = as<arma::uvec>(MaxMincpp(wn));
+  // arma::uvec orda = ord-1;
+  // D1a = D1a(orda);
+  // 
+  // for(int ni=1; ni<D1.size(); ni++){
+  //   arma::vec try_dist2 = arma::zeros(ni);
+  //   for(unsigned int j=0; j<ni; j++){
+  //     arma::rowvec rdiff = w.row(D1a(j)) - w.row(D1a(ni));
+  //     try_dist2(j) = arma::accu(rdiff % rdiff); 
+  //   }
+  //   arma::uvec try_sort_id = arma::sort_index(try_dist2);
+  //   int neighbor_size_i = std::min(sr,ni);
+  //   Nset(D1a(ni)) = arma::join_cols(Nset(D1a(ni)),D1a(try_sort_id.rows(0,neighbor_size_i-1)));
+  // }
   
   return Nset;
 }

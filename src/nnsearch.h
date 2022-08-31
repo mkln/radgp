@@ -1,5 +1,6 @@
 
 #include <RcppArmadillo.h>
+#include "MaxMin.h"
 using namespace std;
 
 arma::umat make_candidates(const arma::mat& w, const arma::uvec& indsort, 
