@@ -1,5 +1,5 @@
 predict.response.vecchia <- function(obj, newcoords, n_threads){
-  ixmm_pred <- GPvecchia::order_maxmin_exact_obs_pred(coords_in, newcoords)$ord_pred
+  ixmm_pred <- GPvecchia::order_maxmin_exact_obs_pred(obj$coords, newcoords)$ord_pred
   
   newcoords_mm <- newcoords[ixmm_pred,]
   coords_all_mm <- rbind(obj$coords, newcoords_mm)
