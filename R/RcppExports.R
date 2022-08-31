@@ -5,6 +5,10 @@ hmat_from_dag <- function(coords, dag, theta) {
     .Call(`_altdag_hmat_from_dag`, coords, dag, theta)
 }
 
+pred_from_dag <- function(coords, dag, theta, urng) {
+    .Call(`_altdag_pred_from_dag`, coords, dag, theta, urng)
+}
+
 altdaggp <- function(coords, theta, rho) {
     .Call(`_altdag_altdaggp`, coords, theta, rho)
 }
@@ -15,10 +19,6 @@ vecchiagp <- function(coords, theta, dag) {
 
 altdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds) {
     .Call(`_altdag_altdaggp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds)
-}
-
-altdaggp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, num_threads) {
-    .Call(`_altdag_altdaggp_response_predict`, cout, y, coords, rho, theta_mcmc, M, num_threads)
 }
 
 altdaggp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds) {
@@ -67,5 +67,13 @@ dagbuild_from_nn_testset <- function(Rset, ntrain, layers, Mmin) {
 
 Raltdagbuild_testset <- function(wtrain, wtest, rho, M) {
     .Call(`_altdag_Raltdagbuild_testset`, wtrain, wtest, rho, M)
+}
+
+altdaggp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, num_threads) {
+    .Call(`_altdag_altdaggp_response_predict`, cout, y, coords, rho, theta_mcmc, M, num_threads)
+}
+
+vecchiagp_response_predict <- function(cout, y, coords, dag, theta_mcmc, num_threads) {
+    .Call(`_altdag_vecchiagp_response_predict`, cout, y, coords, dag, theta_mcmc, num_threads)
 }
 

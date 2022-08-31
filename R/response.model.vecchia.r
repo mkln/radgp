@@ -25,8 +25,12 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
     response_model <- altdaggp_custom(y_mm, coords_mm, nn_dag, mcmc, n_threads,
                                       theta_start, metrop_sd, unif_bounds) })
   
-  return(c(response_model, list(
+  result <- c(response_model, list(
     dag=nn_dag,
-    ord=ixmm
-  )))
+    ord=ixmm,
+    m=m,
+    y=y_mm,
+    coords=coords_mm))
+  class(result) <- "response.vecchia"
+  return(result)
 }

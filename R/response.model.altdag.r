@@ -20,7 +20,7 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
   
   result <- c(altdag_model, list(time=altdag_time))
   
-  class(result) <- "altdag"
+  class(result) <- "response.altdag"
   return(result)
 }
 

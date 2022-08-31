@@ -31,7 +31,7 @@ df <- cbind(coords_all, yall) %>% as.data.frame()
 colnames(df) <- c("Var1", "Var2", "y")
 
 y_train <- yall[1:ntrain]
-
+y_test <- tail(yall, ntest)
 
 # visualize data on the gridded test set
 df %>% tail(ntest) %>% 
@@ -82,6 +82,10 @@ ggplot(df_theta, aes(m, chain)) +
 
 # AltDAG prediction
 altdag_predict <- predict(altdag_model, coords_test, 16)
+
+# VecchiaGP prediction
+vecchiagp_predict <- predict(maxmin_model, coords_test, 16)
+
 
 # altdag_predict$yout is a ntest x mcmc matrix of posterior predictive draws
 yout_chain <- altdag_predict$yout[,-(1:1000)] # remove first 1000 iterations for burn-in

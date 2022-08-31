@@ -31,7 +31,7 @@ public:
   int M;
   double rho;
   
-  Eigen::SparseMatrix<double> H;
+  Eigen::SparseMatrix<double> A, H;
   
   double logdens(const arma::vec& theta);
   void make_precision(const arma::vec& theta);

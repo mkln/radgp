@@ -23,6 +23,7 @@ Rcpp::List altdaggp(const arma::mat& coords,
   return Rcpp::List::create(
     Rcpp::Named("dag") = adag.dag,
     Rcpp::Named("ldens") = ldens,
+    Rcpp::Named("A") = adag.A,
     Rcpp::Named("H") = adag.H,
     Rcpp::Named("layers") = adag.layers
   );
@@ -42,6 +43,7 @@ Rcpp::List vecchiagp(const arma::mat& coords,
   return Rcpp::List::create(
     Rcpp::Named("dag") = adag.dag,
     Rcpp::Named("ldens") = ldens,
+    Rcpp::Named("A") = adag.A,
     Rcpp::Named("H") = adag.H
   );
 }
@@ -179,70 +181,6 @@ Rcpp::List altdaggp_response(const arma::vec& y,
   );
 }
 
-//[[Rcpp::export]]
-Rcpp::List altdaggp_response_predict(const arma::mat& cout,
-                                     const arma::vec& y, 
-                                     const arma::mat& coords, double rho,
-                                     const arma::mat& theta_mcmc, 
-                                     int M,
-                                     int num_threads){
-  arma::uvec oneuv = arma::ones<arma::uvec>(1);
-  
-  int ntrain = coords.n_rows;
-  int ntest = cout.n_rows;
-  int mcmc = theta_mcmc.n_cols;
-  arma::mat cxall = arma::join_vert(coords, cout);
-  
-  arma::uvec layers;
-  arma::field<arma::uvec> predict_dag = 
-    altdagbuild_testset(coords, cout, rho, layers, M);
-  arma::uvec pred_order = arma::sort_index(layers);
-  
-  arma::mat yout_mcmc = arma::zeros(ntest, mcmc);
-  arma::mat random_stdnormal = arma::randn(mcmc, ntest);
-  
-  Rcpp::Rcout << "predicting " << endl;
-#ifdef _OPENMP
-#pragma omp parallel for 
-#endif
-  for(int m=0; m<mcmc; m++){
-    arma::vec theta = theta_mcmc.col(m);
-    
-    arma::vec ytemp = arma::zeros(ntrain+ntest);
-    ytemp.subvec(0, ntrain-1) = y;
-    for(int i=0; i<ntest; i++){
-      
-      int itarget = pred_order(ntrain+i);
-      int idagtarget = itarget - ntrain;
-      
-      arma::uvec ix = oneuv * (itarget);
-      arma::uvec px = predict_dag(idagtarget);
-      
-      arma::mat CC = Correlationf(cxall, ix, ix, 
-                                  theta, false, true);
-      arma::mat CPt = Correlationf(cxall, px, ix, theta, false, false);
-      arma::mat PPi = 
-        arma::inv_sympd( Correlationf(cxall, px, px, theta, false, true) );
-      
-      arma::vec ht = PPi * CPt;
-      double sqrtR = sqrt( arma::conv_to<double>::from(
-        CC - CPt.t() * ht ) );
-      
-      ytemp(itarget) = arma::conv_to<double>::from(
-        ht.t() * ytemp(px) + random_stdnormal(m, i) * sqrtR );
-      
-      yout_mcmc(itarget-ntrain, m) = ytemp(itarget);
-    }
-
-  }
-  
-  return Rcpp::List::create(
-    Rcpp::Named("yout") = yout_mcmc,
-    Rcpp::Named("predict_dag") = predict_dag,
-    Rcpp::Named("layers") = layers,
-    Rcpp::Named("pred_order") = pred_order
-  );
-}
 
 //[[Rcpp::export]]
 Rcpp::List altdaggp_custom(const arma::vec& y,

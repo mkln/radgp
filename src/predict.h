@@ -1,5 +1,7 @@
 
 #include <RcppArmadillo.h>
+#include "covariance.h"
+
 using namespace std;
 
 arma::umat make_candidates_testset(const arma::mat& w, 
