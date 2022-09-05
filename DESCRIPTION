@@ -7,5 +7,5 @@ Author: Michele Peruzzi, Yichen Zhu
 Maintainer: Michele Peruzzi <michele.peruzzi@duke.edu>
 Description: Markov-chain Monte Carlo estimation of Alternating Partition DAG Gaussian Process. This package currently implements a response model using the AltDAG.
 License: What license is it under?
-Imports: Rcpp (>= 1.0.8.3)
+Imports: Rcpp (>= 1.0.8.3), FNN, GPvecchia
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen

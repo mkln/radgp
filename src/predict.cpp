@@ -251,7 +251,7 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
   
   Rcpp::Rcout << "VecchiaGP predicting " << endl;
 #ifdef _OPENMP
-//#pragma omp parallel for 
+#pragma omp parallel for 
 #endif
   for(int m=0; m<mcmc; m++){
     arma::vec theta = theta_mcmc.col(m);

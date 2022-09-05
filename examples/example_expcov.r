@@ -84,11 +84,12 @@ ggplot(df_theta, aes(m, chain)) +
 altdag_predict <- predict(altdag_model, coords_test, 16)
 
 # VecchiaGP prediction
-vecchiagp_predict <- predict(maxmin_model, coords_test, 16)
+vecchiagp_predict <- predict(maxmin_model, coords_test, 16, independent=FALSE)
+vecchiagp_predict_i <- predict(maxmin_model, coords_test, 16, independent=TRUE)
 
 sqrt(mean((apply(altdag_predict$yout,1,mean)-y_test)^2))
 sqrt(mean((apply(vecchiagp_predict$yout,1,mean)-y_test)^2))
-
+sqrt(mean((apply(vecchiagp_predict_i$yout,1,mean)-y_test)^2))
 
 # altdag_predict$yout is a ntest x mcmc matrix of posterior predictive draws
 yout_chain <- altdag_predict$yout[,-(1:1000)] # remove first 1000 iterations for burn-in
