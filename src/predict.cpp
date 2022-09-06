@@ -169,13 +169,14 @@ Rcpp::List altdaggp_response_predict(const arma::mat& cout,
                                      const arma::vec& y, 
                                      const arma::mat& coords, double rho,
                                      const arma::mat& theta_mcmc, 
-                                     int M,
+                                     int M, int mc_keep,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
   
   int ntrain = coords.n_rows;
   int ntest = cout.n_rows;
   int mcmc = theta_mcmc.n_cols;
+  int mc_burn = mcmc - mc_keep;
   arma::mat cxall = arma::join_vert(coords, cout);
   
   arma::uvec layers;
@@ -183,15 +184,15 @@ Rcpp::List altdaggp_response_predict(const arma::mat& cout,
     altdagbuild_testset(coords, cout, rho, layers, M);
   arma::uvec pred_order = arma::sort_index(layers);
   
-  arma::mat yout_mcmc = arma::zeros(ntest, mcmc);
-  arma::mat random_stdnormal = arma::randn(mcmc, ntest);
+  arma::mat yout_mcmc = arma::zeros(ntest, mc_keep);
+  arma::mat random_stdnormal = arma::randn(mc_keep, ntest);
   
   Rcpp::Rcout << "AltDAG-GP predicting " << endl;
 #ifdef _OPENMP
 #pragma omp parallel for 
 #endif
-  for(int m=0; m<mcmc; m++){
-    arma::vec theta = theta_mcmc.col(m);
+  for(int m=0; m<mc_keep; m++){
+    arma::vec theta = theta_mcmc.col(m+mc_burn);
     
     arma::vec ytemp = arma::zeros(ntrain+ntest);
     ytemp.subvec(0, ntrain-1) = y;
@@ -234,17 +235,18 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
                                      const arma::vec& y, 
                                      const arma::mat& coords, 
                                      const arma::field<arma::uvec>& dag,
-                                     const arma::mat& theta_mcmc, 
+                                     const arma::mat& theta_mcmc, int mc_keep,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
   
   int ntrain = coords.n_rows;
   int ntest = cout.n_rows;
   int mcmc = theta_mcmc.n_cols;
+  int mc_burn = mcmc - mc_keep;
   arma::mat cxall = arma::join_vert(coords, cout);
   
-  arma::mat yout_mcmc = arma::zeros(ntest, mcmc);
-  arma::mat random_stdnormal = arma::randn(mcmc, ntest);
+  arma::mat yout_mcmc = arma::zeros(ntest, mc_keep);
+  arma::mat random_stdnormal = arma::randn(mc_keep, ntest);
   
   arma::vec ytemp = arma::zeros(ntrain+ntest);
   ytemp.subvec(0, ntrain-1) = y;
@@ -253,8 +255,8 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
 #ifdef _OPENMP
 #pragma omp parallel for 
 #endif
-  for(int m=0; m<mcmc; m++){
-    arma::vec theta = theta_mcmc.col(m);
+  for(int m=0; m<mc_keep; m++){
+    arma::vec theta = theta_mcmc.col(m+mc_burn);
     
     for(int i=0; i<ntest; i++){
       
