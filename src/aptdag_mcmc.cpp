@@ -54,15 +54,14 @@ void response_mcmc(AptDAG& adag,
                    int mcmc, 
                    const arma::vec& theta_init,
                    double metrop_sd,
-                   const arma::mat& theta_unif_bounds){
+                   const arma::mat& theta_unif_bounds,
+                   int print_every=10){
   
   // timers
   std::chrono::steady_clock::time_point start_mcmc = std::chrono::steady_clock::now();
   std::chrono::steady_clock::time_point end_mcmc = std::chrono::steady_clock::now();
   std::chrono::steady_clock::time_point tick_mcmc = std::chrono::steady_clock::now();
   // ------
-  
-  int print_every = 100;
   
   arma::vec theta = theta_init;
   
@@ -156,8 +155,10 @@ Rcpp::List aptdaggp_response(const arma::vec& y,
                     int num_threads,
                     const arma::vec& theta_init,
                     double metrop_sd,
-                    const arma::mat& theta_unif_bounds){
+                    const arma::mat& theta_unif_bounds,
+                    int num_prints = 10){
   
+  int print_every = num_prints>0? round(mcmc/num_prints) : 0;
   
 #ifdef _OPENMP
   omp_set_num_threads(num_threads);
@@ -168,7 +169,7 @@ Rcpp::List aptdaggp_response(const arma::vec& y,
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
   
-  response_mcmc(adag, theta_mcmc, logdens_mcmc, mcmc, theta_init, metrop_sd, theta_unif_bounds);
+  response_mcmc(adag, theta_mcmc, logdens_mcmc, mcmc, theta_init, metrop_sd, theta_unif_bounds, print_every);
 
   return Rcpp::List::create(
     Rcpp::Named("M") = adag.M,
@@ -190,7 +191,10 @@ Rcpp::List aptdaggp_custom(const arma::vec& y,
                              int num_threads,
                              const arma::vec& theta_init,
                              double metrop_sd,
-                             const arma::mat& theta_unif_bounds){
+                             const arma::mat& theta_unif_bounds,
+                             int num_prints = 10){
+  
+  int print_every = num_prints>0? round(mcmc/num_prints) : 0;
   
   
 #ifdef _OPENMP
@@ -202,7 +206,7 @@ Rcpp::List aptdaggp_custom(const arma::vec& y,
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
   
-  response_mcmc(adag, theta_mcmc, logdens_mcmc, mcmc, theta_init, metrop_sd, theta_unif_bounds);
+  response_mcmc(adag, theta_mcmc, logdens_mcmc, mcmc, theta_init, metrop_sd, theta_unif_bounds, print_every);
     
     return Rcpp::List::create(
       Rcpp::Named("M") = adag.M,

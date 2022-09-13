@@ -1,5 +1,5 @@
 response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
-                                   theta_start=NULL, unif_bounds=NULL){
+                                   theta_start=NULL, unif_bounds=NULL, printn=10){
   
   if(is.null(theta_start)){
     theta_start <- c(5, 1, 1.5, 1)  
@@ -22,8 +22,8 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   nn_dag <- apply(nn_dag_mat, 1, function(x){ x[!is.na(x)][-1]-1 })
   
   maxmin_time <- system.time({    
-    response_model <- altdaggp_custom(y_mm, coords_mm, nn_dag, mcmc, n_threads,
-                                      theta_start, metrop_sd, unif_bounds) })
+    response_model <- aptdaggp_custom(y_mm, coords_mm, nn_dag, mcmc, n_threads,
+                                      theta_start, metrop_sd, unif_bounds, printn) })
   
   result <- c(response_model, list(
     dag=nn_dag,

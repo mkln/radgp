@@ -22,7 +22,7 @@ nall <- nrow(coords_all)
 
 # gen data from full GP
 # theta : phi, sigmasq, nu, nugg
-theta <- c(4, 2, 1.6, 0.02)
+theta <- c(133, 1, 1.98, 1e-3)
 
 CC <- aptdag::Correlationc(coords_all, coords_all, theta, TRUE)
 LC <- t(chol(CC))
@@ -58,15 +58,30 @@ dag$dag %>% sapply(length) %>% mean()
 
 ################################################################# MCMC 
 ###############################################################################
-mcmc <- 2500
+mcmc <- 5000
 
 # using the last rho value used in the preliminary step
-aptdag_model <- response.model(y_train, coords_train, rho=rho, mcmc, 16)
+
+unif_bounds <- matrix(nrow=4, ncol=2)
+unif_bounds[1,] <- c(10, 300) # phi
+unif_bounds[2,] <- c(.5, 2) # sigmasq
+unif_bounds[3,] <- c(1.5, 2-.001) # nu
+unif_bounds[4,] <- c(1e-4, 1e-4+1e-5) # nugget
+
+theta_start <- c(50, 1, 1.7, 1e-4+0.5*1e-5)
+
+aptdag_model <- response.model(y_train, coords_train, rho=rho, 
+                               theta_start=theta_start,
+                               unif_bounds=unif_bounds,
+                               mcmc=mcmc, n_threads=16, printn=10)
 # posterior mean for theta
 aptdag_model$theta %>% apply(1, mean)
 
 # vecchia-maxmin estimation MCMC
-maxmin_model <- response.model.vecchia(y_train, coords_train, m=25, mcmc, 16)
+maxmin_model <- response.model.vecchia(y_train, coords_train, m=25, 
+                                       theta_start=theta_start,
+                                       unif_bounds=unif_bounds,
+                                       mcmc=mcmc, n_threads=16, printn=10)
 # posterior mean for theta
 maxmin_model$theta %>% apply(1, mean)
 
@@ -122,8 +137,8 @@ ggplot(plot_df %>% filter(sample=="out"), aes(Var1, Var2, fill=y_high)) +
 ################################################################# MLE
 ###############################################################################
 # visualize the likelihood on a grid of phi/sigmasq fixing true tausq
-parvals <- expand.grid(seq(1, 30, length.out=30),
-                       seq(1, 5, length.out=30),
+parvals <- expand.grid(seq(1, 300, length.out=30),
+                       seq(0.1, 2, length.out=30),
                        theta[3],
                        theta[4])
 

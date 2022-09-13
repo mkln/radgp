@@ -1,5 +1,5 @@
 response.model <- function(y, coords, rho, mcmc, n_threads,
-                           theta_start=NULL, unif_bounds=NULL){
+                           theta_start=NULL, unif_bounds=NULL, printn=10){
   
   if(is.null(theta_start)){
     theta_start <- c(5, 1, 1.5, 1)  
@@ -16,7 +16,7 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
   metrop_sd <- 0.15
   aptdag_time <- system.time({
     aptdag_model <- aptdaggp_response(y, coords_train, rho=rho, mcmc, n_threads,
-                                      theta_start, metrop_sd, unif_bounds) })
+                                      theta_start, metrop_sd, unif_bounds, printn) })
   
   result <- c(aptdag_model, list(time=aptdag_time))
   

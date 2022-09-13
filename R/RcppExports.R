@@ -17,12 +17,12 @@ vecchiagp <- function(coords, theta, dag) {
     .Call(`_aptdag_vecchiagp`, coords, theta, dag)
 }
 
-aptdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds) {
-    .Call(`_aptdag_aptdaggp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds)
+aptdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints = 10L) {
+    .Call(`_aptdag_aptdaggp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints)
 }
 
-aptdaggp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds) {
-    .Call(`_aptdag_aptdaggp_custom`, y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds)
+aptdaggp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints = 10L) {
+    .Call(`_aptdag_aptdaggp_custom`, y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints)
 }
 
 daggp_negdens <- function(y, coords, dag, theta, num_threads) {
