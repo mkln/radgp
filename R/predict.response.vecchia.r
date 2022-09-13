@@ -16,7 +16,9 @@ predict.response.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1
     result <- vecchiagp_response_predict(newcoords_mm, obj$y, obj$coords, nn_dag,
                                         theta, n_threads)
     
-    return(list(yout = result[order(ixmm_pred),]))
+    return(list(yout = result[order(ixmm_pred),],
+                dag = nn_dag,
+                ord = ixmm_pred))
   } else {
     
     # find nearest neighbor in reference set
@@ -28,7 +30,8 @@ predict.response.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1
     result <- vecchiagp_response_predict(newcoords, obj$y, obj$coords, nn_dag,
                                          theta, n_threads)
     
-    return(list(yout = result))
+    return(list(yout = result,
+                dag = nn_dag))
   }
 }
 
