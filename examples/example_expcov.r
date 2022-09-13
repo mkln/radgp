@@ -3,7 +3,7 @@ library(tidyverse)
 library(magrittr)
 library(Matrix)
 #library(reticulate)
-library(altdag)
+library(aptdag)
 
 ################################################################# data
 ###############################################################################
@@ -24,7 +24,7 @@ nall <- nrow(coords_all)
 # theta : phi, sigmasq, nu, nugg
 theta <- c(4, 2, 1.6, 0.02)
 
-CC <- altdag::Correlationc(coords_all, coords_all, theta, TRUE)
+CC <- aptdag::Correlationc(coords_all, coords_all, theta, TRUE)
 LC <- t(chol(CC))
 yall <- LC %*% rnorm(nall) 
 df <- cbind(coords_all, yall) %>% as.data.frame() 
@@ -52,7 +52,7 @@ df %>% head(ntrain) %>%
 ###############################################################################
 # check size of conditioning set
 system.time({
-  dag <- Raltdagbuild(coords_train, rho <- 0.1)
+  dag <- Raptdagbuild(coords_train, rho <- 0.1)
 })
 dag$dag %>% sapply(length) %>% mean()
 
@@ -61,9 +61,9 @@ dag$dag %>% sapply(length) %>% mean()
 mcmc <- 2500
 
 # using the last rho value used in the preliminary step
-altdag_model <- response.model(y_train, coords_train, rho=rho, mcmc, 16)
+aptdag_model <- response.model(y_train, coords_train, rho=rho, mcmc, 16)
 # posterior mean for theta
-altdag_model$theta %>% apply(1, mean)
+aptdag_model$theta %>% apply(1, mean)
 
 # vecchia-maxmin estimation MCMC
 maxmin_model <- response.model.vecchia(y_train, coords_train, m=25, mcmc, 16)
@@ -71,7 +71,7 @@ maxmin_model <- response.model.vecchia(y_train, coords_train, m=25, mcmc, 16)
 maxmin_model$theta %>% apply(1, mean)
 
 # Parameter chains
-df_theta <- altdag_model$theta %>% t() %>% as.data.frame() %>% 
+df_theta <- aptdag_model$theta %>% t() %>% as.data.frame() %>% 
   mutate(m = 1:n()) %>% tail(-100)
 colnames(df_theta) <- c("phi", "sigmasq", "tausq", "m")
 df_theta %<>% tidyr::gather(variable, chain, -m)
@@ -81,18 +81,18 @@ ggplot(df_theta, aes(m, chain)) +
   facet_wrap(~ variable, scales="free")
 
 # AltDAG prediction
-altdag_predict <- predict(altdag_model, coords_test, 16)
+aptdag_predict <- predict(aptdag_model, coords_test, n_threads=16)
 
 # VecchiaGP prediction
 vecchiagp_predict <- predict(maxmin_model, coords_test, 16, independent=FALSE)
 vecchiagp_predict_i <- predict(maxmin_model, coords_test, 16, independent=TRUE)
 
-sqrt(mean((apply(altdag_predict$yout,1,mean)-y_test)^2))
+sqrt(mean((apply(aptdag_predict$yout,1,mean)-y_test)^2))
 sqrt(mean((apply(vecchiagp_predict$yout,1,mean)-y_test)^2))
 sqrt(mean((apply(vecchiagp_predict_i$yout,1,mean)-y_test)^2))
 
-# altdag_predict$yout is a ntest x mcmc matrix of posterior predictive draws
-yout_chain <- altdag_predict$yout[,-(1:1000)] # remove first 1000 iterations for burn-in
+# aptdag_predict$yout is a ntest x mcmc matrix of posterior predictive draws
+yout_chain <- aptdag_predict$yout[,-(1:1000)] # remove first 1000 iterations for burn-in
 
 out_df <- cbind(coords_test, data.frame(
   yout_mean = yout_chain %>% apply(1, median),
@@ -151,8 +151,8 @@ mle_vecchia <- optim(c(1,.1,.1), ldens, method="L-BFGS-B", hessian=TRUE)
 ################################################################# visualization
 ###############################################################################
 
-# compare parent sets for altdag v vecchia maxmin
-# plot altdag parent sets
+# compare parent sets for aptdag v vecchia maxmin
+# plot aptdag parent sets
 par(mfrow=c(1,2))
 
 i <- 1

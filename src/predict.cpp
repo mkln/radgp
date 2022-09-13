@@ -140,7 +140,7 @@ arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& 
   return Nset;
 }
 
-arma::field<arma::uvec> altdagbuild_testset(const arma::mat& wtrain,
+arma::field<arma::uvec> aptdagbuild_testset(const arma::mat& wtrain,
                                             const arma::mat& wtest, 
                                             double rho,
                                             arma::uvec& layers, int M){
@@ -152,7 +152,7 @@ arma::field<arma::uvec> altdagbuild_testset(const arma::mat& wtrain,
 
 
 //[[Rcpp::export]]
-Rcpp::List Raltdagbuild_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M){
+Rcpp::List Raptdagbuild_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M){
   arma::field<arma::uvec> Rset = neighbor_search_testset(wtrain, wtest, rho);
   int ntrain = wtrain.n_rows;
   arma::uvec layers;
@@ -165,7 +165,7 @@ Rcpp::List Raltdagbuild_testset(const arma::mat& wtrain, const arma::mat& wtest,
 }
 
 //[[Rcpp::export]]
-Rcpp::List altdaggp_response_predict(const arma::mat& cout,
+Rcpp::List aptdaggp_response_predict(const arma::mat& cout,
                                      const arma::vec& y, 
                                      const arma::mat& coords, double rho,
                                      const arma::mat& theta_mcmc, 
@@ -180,13 +180,13 @@ Rcpp::List altdaggp_response_predict(const arma::mat& cout,
   
   arma::uvec layers;
   arma::field<arma::uvec> predict_dag = 
-    altdagbuild_testset(coords, cout, rho, layers, M);
+    aptdagbuild_testset(coords, cout, rho, layers, M);
   arma::uvec pred_order = arma::sort_index(layers);
   
   arma::mat yout_mcmc = arma::zeros(ntest, mcmc);
   arma::mat random_stdnormal = arma::randn(mcmc, ntest);
   
-  Rcpp::Rcout << "AltDAG-GP predicting " << endl;
+  Rcpp::Rcout << "AptDAG-GP predicting " << endl;
 #ifdef _OPENMP
 #pragma omp parallel for 
 #endif

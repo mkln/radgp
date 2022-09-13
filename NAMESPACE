@@ -1,4 +1,4 @@
-useDynLib(altdag, .registration=TRUE)
+useDynLib(aptdag, .registration=TRUE)
 importFrom(Rcpp, evalCpp)
 exportPattern("^[[:alpha:]]+")
 
@@ -7,5 +7,5 @@ importFrom(GPvecchia, "order_maxmin_exact_obs_pred")
 #importFrom(GPvecchia, "findOrderedNN_kdtree2")
 importFrom(GPvecchia, "order_maxmin_exact")
 
-S3method("predict", "response.altdag")
+S3method("predict", "response.aptdag")
 S3method("predict", "response.vecchia")

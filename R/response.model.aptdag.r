@@ -14,13 +14,13 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
   }
   
   metrop_sd <- 0.15
-  altdag_time <- system.time({
-    altdag_model <- altdaggp_response(y, coords_train, rho=rho, mcmc, n_threads,
+  aptdag_time <- system.time({
+    aptdag_model <- aptdaggp_response(y, coords_train, rho=rho, mcmc, n_threads,
                                       theta_start, metrop_sd, unif_bounds) })
   
-  result <- c(altdag_model, list(time=altdag_time))
+  result <- c(aptdag_model, list(time=aptdag_time))
   
-  class(result) <- "response.altdag"
+  class(result) <- "response.aptdag"
   return(result)
 }
 

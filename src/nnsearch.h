@@ -12,6 +12,6 @@ arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho);
   
 arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, int& M, const arma::mat& w, double rho);
 
-arma::field<arma::uvec> altdagbuild(const arma::mat& w, double rho, arma::uvec& layers, int& M);
+arma::field<arma::uvec> aptdagbuild(const arma::mat& w, double rho, arma::uvec& layers, int& M);
 
 arma::umat sparse_struct(const arma::field<arma::uvec>& dag, int nr);

@@ -1,6 +1,6 @@
-#include "altdag.h"
+#include "aptdag.h"
 
-AltDAG::AltDAG(
+AptDAG::AptDAG(
     const arma::vec& y_in,
     const arma::mat& coords_in, 
     double rho_in){
@@ -10,11 +10,11 @@ AltDAG::AltDAG(
   rho = rho_in;
   
   layers = arma::zeros<arma::uvec>(nr);
-  dag = altdagbuild(coords, rho, layers, M);
+  dag = aptdagbuild(coords, rho, layers, M);
   oneuv = arma::ones<arma::uvec>(1);
 }
 
-AltDAG::AltDAG(
+AptDAG::AptDAG(
   const arma::vec& y_in,
   const arma::mat& coords_in, 
   const arma::field<arma::uvec>& custom_dag){
@@ -27,7 +27,7 @@ AltDAG::AltDAG(
   oneuv = arma::ones<arma::uvec>(1);
 }
 
-double AltDAG::logdens(const arma::vec& theta){
+double AptDAG::logdens(const arma::vec& theta){
   arma::vec logdetvec = arma::zeros(nr);
   arma::vec logdensvec = arma::zeros(nr);
   
@@ -59,7 +59,7 @@ double AltDAG::logdens(const arma::vec& theta){
 }
 
 
-void AltDAG::make_precision(const arma::vec& theta){
+void AptDAG::make_precision(const arma::vec& theta){
   typedef Eigen::Triplet<double> T;
   std::vector<T> tripletList_H, tripletList_A;
   

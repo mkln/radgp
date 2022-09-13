@@ -14,7 +14,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // hmat_from_dag
 Eigen::SparseMatrix<double> hmat_from_dag(const arma::mat& coords, const arma::field<arma::uvec>& dag, const arma::vec& theta);
-RcppExport SEXP _altdag_hmat_from_dag(SEXP coordsSEXP, SEXP dagSEXP, SEXP thetaSEXP) {
+RcppExport SEXP _aptdag_hmat_from_dag(SEXP coordsSEXP, SEXP dagSEXP, SEXP thetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -27,7 +27,7 @@ END_RCPP
 }
 // pred_from_dag
 arma::vec pred_from_dag(const arma::mat& coords, const arma::field<arma::uvec>& dag, const arma::vec& theta, const arma::vec& urng);
-RcppExport SEXP _altdag_pred_from_dag(SEXP coordsSEXP, SEXP dagSEXP, SEXP thetaSEXP, SEXP urngSEXP) {
+RcppExport SEXP _aptdag_pred_from_dag(SEXP coordsSEXP, SEXP dagSEXP, SEXP thetaSEXP, SEXP urngSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,22 +39,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// altdaggp
-Rcpp::List altdaggp(const arma::mat& coords, const arma::vec& theta, double rho);
-RcppExport SEXP _altdag_altdaggp(SEXP coordsSEXP, SEXP thetaSEXP, SEXP rhoSEXP) {
+// aptdaggp
+Rcpp::List aptdaggp(const arma::mat& coords, const arma::vec& theta, double rho);
+RcppExport SEXP _aptdag_aptdaggp(SEXP coordsSEXP, SEXP thetaSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type coords(coordsSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    rcpp_result_gen = Rcpp::wrap(altdaggp(coords, theta, rho));
+    rcpp_result_gen = Rcpp::wrap(aptdaggp(coords, theta, rho));
     return rcpp_result_gen;
 END_RCPP
 }
 // vecchiagp
 Rcpp::List vecchiagp(const arma::mat& coords, const arma::vec& theta, const arma::field<arma::uvec>& dag);
-RcppExport SEXP _altdag_vecchiagp(SEXP coordsSEXP, SEXP thetaSEXP, SEXP dagSEXP) {
+RcppExport SEXP _aptdag_vecchiagp(SEXP coordsSEXP, SEXP thetaSEXP, SEXP dagSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -65,9 +65,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// altdaggp_response
-Rcpp::List altdaggp_response(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds);
-RcppExport SEXP _altdag_altdaggp_response(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP) {
+// aptdaggp_response
+Rcpp::List aptdaggp_response(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds);
+RcppExport SEXP _aptdag_aptdaggp_response(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -79,13 +79,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type theta_init(theta_initSEXP);
     Rcpp::traits::input_parameter< double >::type metrop_sd(metrop_sdSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_unif_bounds(theta_unif_boundsSEXP);
-    rcpp_result_gen = Rcpp::wrap(altdaggp_response(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds));
+    rcpp_result_gen = Rcpp::wrap(aptdaggp_response(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds));
     return rcpp_result_gen;
 END_RCPP
 }
-// altdaggp_custom
-Rcpp::List altdaggp_custom(const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds);
-RcppExport SEXP _altdag_altdaggp_custom(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP) {
+// aptdaggp_custom
+Rcpp::List aptdaggp_custom(const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds);
+RcppExport SEXP _aptdag_aptdaggp_custom(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -97,13 +97,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type theta_init(theta_initSEXP);
     Rcpp::traits::input_parameter< double >::type metrop_sd(metrop_sdSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_unif_bounds(theta_unif_boundsSEXP);
-    rcpp_result_gen = Rcpp::wrap(altdaggp_custom(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds));
+    rcpp_result_gen = Rcpp::wrap(aptdaggp_custom(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds));
     return rcpp_result_gen;
 END_RCPP
 }
 // daggp_negdens
 double daggp_negdens(const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, const arma::vec& theta, int num_threads);
-RcppExport SEXP _altdag_daggp_negdens(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP thetaSEXP, SEXP num_threadsSEXP) {
+RcppExport SEXP _aptdag_daggp_negdens(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP thetaSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -118,7 +118,7 @@ END_RCPP
 }
 // Correlationc
 arma::mat Correlationc(const arma::mat& coordsx, const arma::mat& coordsy, const arma::vec& theta, bool same);
-RcppExport SEXP _altdag_Correlationc(SEXP coordsxSEXP, SEXP coordsySEXP, SEXP thetaSEXP, SEXP sameSEXP) {
+RcppExport SEXP _aptdag_Correlationc(SEXP coordsxSEXP, SEXP coordsySEXP, SEXP thetaSEXP, SEXP sameSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -132,7 +132,7 @@ END_RCPP
 }
 // gpkernel
 arma::mat gpkernel(const arma::mat& coordsx, const arma::vec& theta);
-RcppExport SEXP _altdag_gpkernel(SEXP coordsxSEXP, SEXP thetaSEXP) {
+RcppExport SEXP _aptdag_gpkernel(SEXP coordsxSEXP, SEXP thetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -144,7 +144,7 @@ END_RCPP
 }
 // make_candidates
 arma::umat make_candidates(const arma::mat& w, const arma::uvec& indsort, unsigned int col, double rho);
-RcppExport SEXP _altdag_make_candidates(SEXP wSEXP, SEXP indsortSEXP, SEXP colSEXP, SEXP rhoSEXP) {
+RcppExport SEXP _aptdag_make_candidates(SEXP wSEXP, SEXP indsortSEXP, SEXP colSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -158,7 +158,7 @@ END_RCPP
 }
 // neighbor_search
 arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho);
-RcppExport SEXP _altdag_neighbor_search(SEXP wSEXP, SEXP rhoSEXP) {
+RcppExport SEXP _aptdag_neighbor_search(SEXP wSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -170,7 +170,7 @@ END_RCPP
 }
 // dagbuild_from_nn
 arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, arma::uvec& layers, int& M, const arma::mat& w, double rho);
-RcppExport SEXP _altdag_dagbuild_from_nn(SEXP RsetSEXP, SEXP layersSEXP, SEXP MSEXP, SEXP wSEXP, SEXP rhoSEXP) {
+RcppExport SEXP _aptdag_dagbuild_from_nn(SEXP RsetSEXP, SEXP layersSEXP, SEXP MSEXP, SEXP wSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -183,21 +183,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// Raltdagbuild
-Rcpp::List Raltdagbuild(const arma::mat& w, double rho);
-RcppExport SEXP _altdag_Raltdagbuild(SEXP wSEXP, SEXP rhoSEXP) {
+// Raptdagbuild
+Rcpp::List Raptdagbuild(const arma::mat& w, double rho);
+RcppExport SEXP _aptdag_Raptdagbuild(SEXP wSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type w(wSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    rcpp_result_gen = Rcpp::wrap(Raltdagbuild(w, rho));
+    rcpp_result_gen = Rcpp::wrap(Raptdagbuild(w, rho));
     return rcpp_result_gen;
 END_RCPP
 }
 // sparse_struct
 arma::umat sparse_struct(const arma::field<arma::uvec>& dag, int nr);
-RcppExport SEXP _altdag_sparse_struct(SEXP dagSEXP, SEXP nrSEXP) {
+RcppExport SEXP _aptdag_sparse_struct(SEXP dagSEXP, SEXP nrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -209,7 +209,7 @@ END_RCPP
 }
 // neighbor_search_testset
 arma::field<arma::uvec> neighbor_search_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho);
-RcppExport SEXP _altdag_neighbor_search_testset(SEXP wtrainSEXP, SEXP wtestSEXP, SEXP rhoSEXP) {
+RcppExport SEXP _aptdag_neighbor_search_testset(SEXP wtrainSEXP, SEXP wtestSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -222,7 +222,7 @@ END_RCPP
 }
 // dagbuild_from_nn_testset
 arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& Rset, int ntrain, arma::uvec& layers, int Mmin);
-RcppExport SEXP _altdag_dagbuild_from_nn_testset(SEXP RsetSEXP, SEXP ntrainSEXP, SEXP layersSEXP, SEXP MminSEXP) {
+RcppExport SEXP _aptdag_dagbuild_from_nn_testset(SEXP RsetSEXP, SEXP ntrainSEXP, SEXP layersSEXP, SEXP MminSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -234,9 +234,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// Raltdagbuild_testset
-Rcpp::List Raltdagbuild_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M);
-RcppExport SEXP _altdag_Raltdagbuild_testset(SEXP wtrainSEXP, SEXP wtestSEXP, SEXP rhoSEXP, SEXP MSEXP) {
+// Raptdagbuild_testset
+Rcpp::List Raptdagbuild_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M);
+RcppExport SEXP _aptdag_Raptdagbuild_testset(SEXP wtrainSEXP, SEXP wtestSEXP, SEXP rhoSEXP, SEXP MSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -244,13 +244,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type wtest(wtestSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
-    rcpp_result_gen = Rcpp::wrap(Raltdagbuild_testset(wtrain, wtest, rho, M));
+    rcpp_result_gen = Rcpp::wrap(Raptdagbuild_testset(wtrain, wtest, rho, M));
     return rcpp_result_gen;
 END_RCPP
 }
-// altdaggp_response_predict
-Rcpp::List altdaggp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int num_threads);
-RcppExport SEXP _altdag_altdaggp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP num_threadsSEXP) {
+// aptdaggp_response_predict
+Rcpp::List aptdaggp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int num_threads);
+RcppExport SEXP _aptdag_aptdaggp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -261,13 +261,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_mcmc(theta_mcmcSEXP);
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(altdaggp_response_predict(cout, y, coords, rho, theta_mcmc, M, num_threads));
+    rcpp_result_gen = Rcpp::wrap(aptdaggp_response_predict(cout, y, coords, rho, theta_mcmc, M, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
 // vecchiagp_response_predict
 arma::mat vecchiagp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, const arma::mat& theta_mcmc, int num_threads);
-RcppExport SEXP _altdag_vecchiagp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP theta_mcmcSEXP, SEXP num_threadsSEXP) {
+RcppExport SEXP _aptdag_vecchiagp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP theta_mcmcSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -283,29 +283,29 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_altdag_hmat_from_dag", (DL_FUNC) &_altdag_hmat_from_dag, 3},
-    {"_altdag_pred_from_dag", (DL_FUNC) &_altdag_pred_from_dag, 4},
-    {"_altdag_altdaggp", (DL_FUNC) &_altdag_altdaggp, 3},
-    {"_altdag_vecchiagp", (DL_FUNC) &_altdag_vecchiagp, 3},
-    {"_altdag_altdaggp_response", (DL_FUNC) &_altdag_altdaggp_response, 8},
-    {"_altdag_altdaggp_custom", (DL_FUNC) &_altdag_altdaggp_custom, 8},
-    {"_altdag_daggp_negdens", (DL_FUNC) &_altdag_daggp_negdens, 5},
-    {"_altdag_Correlationc", (DL_FUNC) &_altdag_Correlationc, 4},
-    {"_altdag_gpkernel", (DL_FUNC) &_altdag_gpkernel, 2},
-    {"_altdag_make_candidates", (DL_FUNC) &_altdag_make_candidates, 4},
-    {"_altdag_neighbor_search", (DL_FUNC) &_altdag_neighbor_search, 2},
-    {"_altdag_dagbuild_from_nn", (DL_FUNC) &_altdag_dagbuild_from_nn, 5},
-    {"_altdag_Raltdagbuild", (DL_FUNC) &_altdag_Raltdagbuild, 2},
-    {"_altdag_sparse_struct", (DL_FUNC) &_altdag_sparse_struct, 2},
-    {"_altdag_neighbor_search_testset", (DL_FUNC) &_altdag_neighbor_search_testset, 3},
-    {"_altdag_dagbuild_from_nn_testset", (DL_FUNC) &_altdag_dagbuild_from_nn_testset, 4},
-    {"_altdag_Raltdagbuild_testset", (DL_FUNC) &_altdag_Raltdagbuild_testset, 4},
-    {"_altdag_altdaggp_response_predict", (DL_FUNC) &_altdag_altdaggp_response_predict, 7},
-    {"_altdag_vecchiagp_response_predict", (DL_FUNC) &_altdag_vecchiagp_response_predict, 6},
+    {"_aptdag_hmat_from_dag", (DL_FUNC) &_aptdag_hmat_from_dag, 3},
+    {"_aptdag_pred_from_dag", (DL_FUNC) &_aptdag_pred_from_dag, 4},
+    {"_aptdag_aptdaggp", (DL_FUNC) &_aptdag_aptdaggp, 3},
+    {"_aptdag_vecchiagp", (DL_FUNC) &_aptdag_vecchiagp, 3},
+    {"_aptdag_aptdaggp_response", (DL_FUNC) &_aptdag_aptdaggp_response, 8},
+    {"_aptdag_aptdaggp_custom", (DL_FUNC) &_aptdag_aptdaggp_custom, 8},
+    {"_aptdag_daggp_negdens", (DL_FUNC) &_aptdag_daggp_negdens, 5},
+    {"_aptdag_Correlationc", (DL_FUNC) &_aptdag_Correlationc, 4},
+    {"_aptdag_gpkernel", (DL_FUNC) &_aptdag_gpkernel, 2},
+    {"_aptdag_make_candidates", (DL_FUNC) &_aptdag_make_candidates, 4},
+    {"_aptdag_neighbor_search", (DL_FUNC) &_aptdag_neighbor_search, 2},
+    {"_aptdag_dagbuild_from_nn", (DL_FUNC) &_aptdag_dagbuild_from_nn, 5},
+    {"_aptdag_Raptdagbuild", (DL_FUNC) &_aptdag_Raptdagbuild, 2},
+    {"_aptdag_sparse_struct", (DL_FUNC) &_aptdag_sparse_struct, 2},
+    {"_aptdag_neighbor_search_testset", (DL_FUNC) &_aptdag_neighbor_search_testset, 3},
+    {"_aptdag_dagbuild_from_nn_testset", (DL_FUNC) &_aptdag_dagbuild_from_nn_testset, 4},
+    {"_aptdag_Raptdagbuild_testset", (DL_FUNC) &_aptdag_Raptdagbuild_testset, 4},
+    {"_aptdag_aptdaggp_response_predict", (DL_FUNC) &_aptdag_aptdaggp_response_predict, 7},
+    {"_aptdag_vecchiagp_response_predict", (DL_FUNC) &_aptdag_vecchiagp_response_predict, 6},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_altdag(DllInfo *dll) {
+RcppExport void R_init_aptdag(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

@@ -2,78 +2,78 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 hmat_from_dag <- function(coords, dag, theta) {
-    .Call(`_altdag_hmat_from_dag`, coords, dag, theta)
+    .Call(`_aptdag_hmat_from_dag`, coords, dag, theta)
 }
 
 pred_from_dag <- function(coords, dag, theta, urng) {
-    .Call(`_altdag_pred_from_dag`, coords, dag, theta, urng)
+    .Call(`_aptdag_pred_from_dag`, coords, dag, theta, urng)
 }
 
-altdaggp <- function(coords, theta, rho) {
-    .Call(`_altdag_altdaggp`, coords, theta, rho)
+aptdaggp <- function(coords, theta, rho) {
+    .Call(`_aptdag_aptdaggp`, coords, theta, rho)
 }
 
 vecchiagp <- function(coords, theta, dag) {
-    .Call(`_altdag_vecchiagp`, coords, theta, dag)
+    .Call(`_aptdag_vecchiagp`, coords, theta, dag)
 }
 
-altdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds) {
-    .Call(`_altdag_altdaggp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds)
+aptdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds) {
+    .Call(`_aptdag_aptdaggp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds)
 }
 
-altdaggp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds) {
-    .Call(`_altdag_altdaggp_custom`, y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds)
+aptdaggp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds) {
+    .Call(`_aptdag_aptdaggp_custom`, y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds)
 }
 
 daggp_negdens <- function(y, coords, dag, theta, num_threads) {
-    .Call(`_altdag_daggp_negdens`, y, coords, dag, theta, num_threads)
+    .Call(`_aptdag_daggp_negdens`, y, coords, dag, theta, num_threads)
 }
 
 Correlationc <- function(coordsx, coordsy, theta, same) {
-    .Call(`_altdag_Correlationc`, coordsx, coordsy, theta, same)
+    .Call(`_aptdag_Correlationc`, coordsx, coordsy, theta, same)
 }
 
 gpkernel <- function(coordsx, theta) {
-    .Call(`_altdag_gpkernel`, coordsx, theta)
+    .Call(`_aptdag_gpkernel`, coordsx, theta)
 }
 
 make_candidates <- function(w, indsort, col, rho) {
-    .Call(`_altdag_make_candidates`, w, indsort, col, rho)
+    .Call(`_aptdag_make_candidates`, w, indsort, col, rho)
 }
 
 neighbor_search <- function(w, rho) {
-    .Call(`_altdag_neighbor_search`, w, rho)
+    .Call(`_aptdag_neighbor_search`, w, rho)
 }
 
 dagbuild_from_nn <- function(Rset, layers, M, w, rho) {
-    .Call(`_altdag_dagbuild_from_nn`, Rset, layers, M, w, rho)
+    .Call(`_aptdag_dagbuild_from_nn`, Rset, layers, M, w, rho)
 }
 
-Raltdagbuild <- function(w, rho) {
-    .Call(`_altdag_Raltdagbuild`, w, rho)
+Raptdagbuild <- function(w, rho) {
+    .Call(`_aptdag_Raptdagbuild`, w, rho)
 }
 
 sparse_struct <- function(dag, nr) {
-    .Call(`_altdag_sparse_struct`, dag, nr)
+    .Call(`_aptdag_sparse_struct`, dag, nr)
 }
 
 neighbor_search_testset <- function(wtrain, wtest, rho) {
-    .Call(`_altdag_neighbor_search_testset`, wtrain, wtest, rho)
+    .Call(`_aptdag_neighbor_search_testset`, wtrain, wtest, rho)
 }
 
 dagbuild_from_nn_testset <- function(Rset, ntrain, layers, Mmin) {
-    .Call(`_altdag_dagbuild_from_nn_testset`, Rset, ntrain, layers, Mmin)
+    .Call(`_aptdag_dagbuild_from_nn_testset`, Rset, ntrain, layers, Mmin)
 }
 
-Raltdagbuild_testset <- function(wtrain, wtest, rho, M) {
-    .Call(`_altdag_Raltdagbuild_testset`, wtrain, wtest, rho, M)
+Raptdagbuild_testset <- function(wtrain, wtest, rho, M) {
+    .Call(`_aptdag_Raptdagbuild_testset`, wtrain, wtest, rho, M)
 }
 
-altdaggp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, num_threads) {
-    .Call(`_altdag_altdaggp_response_predict`, cout, y, coords, rho, theta_mcmc, M, num_threads)
+aptdaggp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, num_threads) {
+    .Call(`_aptdag_aptdaggp_response_predict`, cout, y, coords, rho, theta_mcmc, M, num_threads)
 }
 
 vecchiagp_response_predict <- function(cout, y, coords, dag, theta_mcmc, num_threads) {
-    .Call(`_altdag_vecchiagp_response_predict`, cout, y, coords, dag, theta_mcmc, num_threads)
+    .Call(`_aptdag_vecchiagp_response_predict`, cout, y, coords, dag, theta_mcmc, num_threads)
 }
 

@@ -18,7 +18,7 @@
 
 using namespace std;
 
-class AltDAG {
+class AptDAG {
 public:
   int nr;
   arma::vec y;
@@ -40,9 +40,9 @@ public:
   
   //double ldens;
   
-  AltDAG(const arma::vec& y,
+  AptDAG(const arma::vec& y,
     const arma::mat& coords, double rho);
-  AltDAG(const arma::vec& y,
+  AptDAG(const arma::vec& y,
          const arma::mat& coords, 
          const arma::field<arma::uvec>& custom_dag);
   

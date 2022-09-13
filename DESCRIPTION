@@ -1,4 +1,4 @@
-Package: altdag
+Package: aptdag
 Type: Package
 Title: Markov-chain Monte Carlo estimation of Alternating Partition DAG Gaussian Process
 Version: 0.0.1

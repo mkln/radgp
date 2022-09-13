@@ -1,7 +1,7 @@
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
-#include "altdag.h"
+#include "aptdag.h"
 #include "predict.h"
 #include "rama.h"
 
@@ -9,12 +9,12 @@ using namespace std;
 
 
 //[[Rcpp::export]]
-Rcpp::List altdaggp(const arma::mat& coords,
+Rcpp::List aptdaggp(const arma::mat& coords,
                     const arma::vec& theta,
                     double rho){
   
   arma::vec y = arma::randn(coords.n_rows);
-  AltDAG adag(y, coords, rho);
+  AptDAG adag(y, coords, rho);
   
   adag.make_precision(theta);
 
@@ -36,7 +36,7 @@ Rcpp::List vecchiagp(const arma::mat& coords,
                     const arma::field<arma::uvec>& dag){
   
   arma::vec y = arma::randn(coords.n_rows);
-  AltDAG adag(y, coords, dag);
+  AptDAG adag(y, coords, dag);
   adag.make_precision(theta);
   double ldens = adag.logdens(theta);
   
@@ -48,7 +48,7 @@ Rcpp::List vecchiagp(const arma::mat& coords,
   );
 }
 
-void response_mcmc(AltDAG& adag, 
+void response_mcmc(AptDAG& adag, 
                    arma::mat& theta_mcmc,
                    arma::vec& logdens_mcmc,
                    int mcmc, 
@@ -149,7 +149,7 @@ void response_mcmc(AltDAG& adag,
 }
 
 //[[Rcpp::export]]
-Rcpp::List altdaggp_response(const arma::vec& y,
+Rcpp::List aptdaggp_response(const arma::vec& y,
                     const arma::mat& coords,
                     double rho,
                     int mcmc,
@@ -163,7 +163,7 @@ Rcpp::List altdaggp_response(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AltDAG adag(y, coords, rho);
+  AptDAG adag(y, coords, rho);
   
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
@@ -183,7 +183,7 @@ Rcpp::List altdaggp_response(const arma::vec& y,
 
 
 //[[Rcpp::export]]
-Rcpp::List altdaggp_custom(const arma::vec& y,
+Rcpp::List aptdaggp_custom(const arma::vec& y,
                              const arma::mat& coords,
                              const arma::field<arma::uvec>& dag,
                              int mcmc,
@@ -197,7 +197,7 @@ Rcpp::List altdaggp_custom(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AltDAG adag(y, coords, dag);
+  AptDAG adag(y, coords, dag);
   
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
@@ -226,7 +226,7 @@ double daggp_negdens(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AltDAG adag(y, coords, dag);
+  AptDAG adag(y, coords, dag);
   
   return adag.logdens(theta);
 }
