@@ -69,11 +69,11 @@ Raltdagbuild_testset <- function(wtrain, wtest, rho, M) {
     .Call(`_altdag_Raltdagbuild_testset`, wtrain, wtest, rho, M)
 }
 
-altdaggp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, mc_keep, num_threads) {
-    .Call(`_altdag_altdaggp_response_predict`, cout, y, coords, rho, theta_mcmc, M, mc_keep, num_threads)
+altdaggp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, num_threads) {
+    .Call(`_altdag_altdaggp_response_predict`, cout, y, coords, rho, theta_mcmc, M, num_threads)
 }
 
-vecchiagp_response_predict <- function(cout, y, coords, dag, theta_mcmc, mc_keep, num_threads) {
-    .Call(`_altdag_vecchiagp_response_predict`, cout, y, coords, dag, theta_mcmc, mc_keep, num_threads)
+vecchiagp_response_predict <- function(cout, y, coords, dag, theta_mcmc, num_threads) {
+    .Call(`_altdag_vecchiagp_response_predict`, cout, y, coords, dag, theta_mcmc, num_threads)
 }
 

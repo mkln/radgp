@@ -249,8 +249,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // altdaggp_response_predict
-Rcpp::List altdaggp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int mc_keep, int num_threads);
-RcppExport SEXP _altdag_altdaggp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP mc_keepSEXP, SEXP num_threadsSEXP) {
+Rcpp::List altdaggp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int num_threads);
+RcppExport SEXP _altdag_altdaggp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -260,15 +260,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_mcmc(theta_mcmcSEXP);
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
-    Rcpp::traits::input_parameter< int >::type mc_keep(mc_keepSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(altdaggp_response_predict(cout, y, coords, rho, theta_mcmc, M, mc_keep, num_threads));
+    rcpp_result_gen = Rcpp::wrap(altdaggp_response_predict(cout, y, coords, rho, theta_mcmc, M, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
 // vecchiagp_response_predict
-arma::mat vecchiagp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, const arma::mat& theta_mcmc, int mc_keep, int num_threads);
-RcppExport SEXP _altdag_vecchiagp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP theta_mcmcSEXP, SEXP mc_keepSEXP, SEXP num_threadsSEXP) {
+arma::mat vecchiagp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, const arma::mat& theta_mcmc, int num_threads);
+RcppExport SEXP _altdag_vecchiagp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP theta_mcmcSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -277,9 +276,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type coords(coordsSEXP);
     Rcpp::traits::input_parameter< const arma::field<arma::uvec>& >::type dag(dagSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_mcmc(theta_mcmcSEXP);
-    Rcpp::traits::input_parameter< int >::type mc_keep(mc_keepSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(vecchiagp_response_predict(cout, y, coords, dag, theta_mcmc, mc_keep, num_threads));
+    rcpp_result_gen = Rcpp::wrap(vecchiagp_response_predict(cout, y, coords, dag, theta_mcmc, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -302,8 +300,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_altdag_neighbor_search_testset", (DL_FUNC) &_altdag_neighbor_search_testset, 3},
     {"_altdag_dagbuild_from_nn_testset", (DL_FUNC) &_altdag_dagbuild_from_nn_testset, 4},
     {"_altdag_Raltdagbuild_testset", (DL_FUNC) &_altdag_Raltdagbuild_testset, 4},
-    {"_altdag_altdaggp_response_predict", (DL_FUNC) &_altdag_altdaggp_response_predict, 8},
-    {"_altdag_vecchiagp_response_predict", (DL_FUNC) &_altdag_vecchiagp_response_predict, 7},
+    {"_altdag_altdaggp_response_predict", (DL_FUNC) &_altdag_altdaggp_response_predict, 7},
+    {"_altdag_vecchiagp_response_predict", (DL_FUNC) &_altdag_vecchiagp_response_predict, 6},
     {NULL, NULL, 0}
 };
 

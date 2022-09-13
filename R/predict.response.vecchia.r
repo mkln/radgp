@@ -1,4 +1,10 @@
-predict.response.vecchia <- function(obj, newcoords, mc_keep, n_threads, independent=FALSE){
+predict.response.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1, independent=FALSE){
+  if(is.null(mcmc_keep)){
+    mcmc_keep <- ncol(obj$theta)
+  }
+  
+  mcmc_burn <- ncol(obj$theta) - mcmc_keep
+  theta <- obj$theta[,-(1:mcmc_burn)]
   if(!independent){
     ixmm_pred <- GPvecchia::order_maxmin_exact_obs_pred(obj$coords, newcoords)$ord_pred
   
@@ -8,7 +14,7 @@ predict.response.vecchia <- function(obj, newcoords, mc_keep, n_threads, indepen
     nn_dag <- apply(nn_dag_mat, 1, function(x){ x[!is.na(x)][-1]-1 })
     
     result <- vecchiagp_response_predict(newcoords_mm, obj$y, obj$coords, nn_dag,
-                                        obj$theta, mc_keep, n_threads)
+                                        theta, n_threads)
     
     return(list(yout = result[order(ixmm_pred),]))
   } else {
@@ -20,7 +26,7 @@ predict.response.vecchia <- function(obj, newcoords, mc_keep, n_threads, indepen
     nn_dag <- c(obj$dag, pred_dag)
     
     result <- vecchiagp_response_predict(newcoords, obj$y, obj$coords, nn_dag,
-                                         obj$theta, mc_keep, n_threads)
+                                         theta, n_threads)
     
     return(list(yout = result))
   }
