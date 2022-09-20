@@ -158,7 +158,7 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
       arma::rowvec rdiff = w.row(D1[j]) - w.row(D1[ni]);
       try_dist2(j) = arma::accu(rdiff % rdiff);
     }   
-    Nset(D1[ni]) = arma::join_cols(Nset(D1[ni]),D1a.elem(arma::find(try_dist2<=4*rho2)));
+    // Nset(D1[ni]) = arma::join_cols(Nset(D1[ni]),D1a.elem(arma::find(try_dist2<=4*rho2)));
     if(Nset(D1[ni]).n_elem == 0){
       arma::uvec try_sort_id = arma::sort_index(try_dist2);
       Nset(D1[ni]) = arma::uvec(1,arma::fill::value(D1[try_sort_id(0)]));

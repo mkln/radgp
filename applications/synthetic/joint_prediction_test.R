@@ -3,7 +3,7 @@ library(tidyverse)
 library(magrittr)
 library(Matrix)
 #library(reticulate)
-library(altdag)
+library(aptdag)
 library(ggplot2)
 library(gridExtra)
 library(RcppHungarian)
@@ -96,7 +96,7 @@ fun_exp <- function(v){
 nexp = 50  ## total number of iterations
 fun_lst = c(max, mean, sd, fun_relu, median, fun_max_min)
 fun_label = c('max', 'mean', 'sd', 'relu', 'median', 'fun_max_min')
-theta <- c(15, 1, 2, 10^(-5))
+theta <- c(15, 1, 1, 10^(-3))
 cov_thre = 0.05
 x_thre = 0.15
 theta[1] = - log(cov_thre/theta[2]) / x_thre^theta[3]
@@ -194,7 +194,7 @@ for (iexp in 1:nexp){
   #-------------------------------------------------------------------------
   # gen data from full GP
   # theta : phi, sigmasq, nu, nugg
-  CC <- altdag::Correlationc(coords_all, coords_all, theta, TRUE)
+  CC <- aptdag::Correlationc(coords_all, coords_all, theta, TRUE)
   CC_train <- CC[1:ntrain,1:ntrain]
   CC_train_inv <- solve(CC_train)
   LC_train <- t(chol(CC_train))
@@ -212,16 +212,24 @@ for (iexp in 1:nexp){
   
   ##------------------------------------------------------------------ altdag model 
   mcmc <- 2500
+  unif_bounds <- matrix(nrow=4, ncol=2)
+  unif_bounds[1,] <- c(1, 300) # phi
+  unif_bounds[2,] <- c(.1, 10) # sigmasq
+  unif_bounds[3,] <- c(0.75, 2-.001) # nu
+  unif_bounds[4,] <- c(1e-5, 1e-1) # nugget
+  theta_start <- c(50, 1, 1.5, 1e-4)
+  
   rho = 0.050
   rho_test = rho
   
   t0 = Sys.time()
   # using the last rho value used in the preliminary step
-  altdag_model <- response.model(y_train, coords_train, rho=rho, mcmc, 16)
+  altdag_model <- response.model(y_train, coords_train, theta_start=theta_start,
+                                 unif_bounds=unif_bounds, rho=rho, mcmc=mcmc, n_threads=16, printn=0)
   t1 = Sys.time()
   
   # AltDAG prediction
-  altdag_predict <- predict(altdag_model, coords_test, rho=rho_test, mc_true, 16)
+  altdag_predict <- predict(altdag_model, coords_test, rho=rho_test, mcmc_keep=mc_true, n_threads=16)
   t2 = Sys.time()
   # yalt_mc is a 1000*ntest matrix of posterior predictive draws
   yalt_mc <- t(altdag_predict$yout) # retain the last mc_true iterations
@@ -236,12 +244,14 @@ for (iexp in 1:nexp){
   # vecchia-maxmin estimation MCMC
   m = 6
   t3 = Sys.time()
-  maxmin_model <- response.model.vecchia(y_train, coords_train, m, mcmc, 16)
+  maxmin_model <- response.model.vecchia(y_train, coords_train, m=m, theta_start=theta_start,
+                                         unif_bounds=unif_bounds,
+                                         mcmc=mcmc, n_threads=16, printn=0)
   t4 = Sys.time()
   # NNGP prediction
-  nngp_predict <- predict(maxmin_model, coords_test, mc_true, 16, independent=FALSE)
+  nngp_predict <- predict(maxmin_model, coords_test, mcmc_keep=mc_true, n_threads=16, independent=FALSE)
   t5 = Sys.time()
-  inngp_predict <- predict(maxmin_model, coords_test, mc_true, 16, independent=TRUE)
+  inngp_predict <- predict(maxmin_model, coords_test, mcmc_keep=mc_true, n_threads=16, independent=TRUE)
   t6 = Sys.time()
 
   ynngp_mc <- t(nngp_predict$yout)
