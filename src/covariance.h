@@ -1,4 +1,3 @@
-#define ARMA_DONT_PRINT_ERRORS
 
 #ifndef XCOV_LMC 
 #define XCOV_LMC

@@ -1,5 +1,5 @@
-#ifndef ALTDAG 
-#define ALTDAG
+#ifndef APTDAG 
+#define APTDAG
 
 // uncomment to disable openmp on compilation
 #include "RcppArmadillo.h"
@@ -22,7 +22,6 @@ class AptDAG {
 public:
   int nr;
   arma::vec y;
-  arma::vec w;
   arma::mat coords;
   
   arma::uvec layers;
@@ -31,23 +30,44 @@ public:
   int M;
   double rho;
   
-  Eigen::SparseMatrix<double> A, H;
+  Eigen::SparseMatrix<double> A, H, Ci;
   
   double logdens(const arma::vec& theta);
-  void make_precision(const arma::vec& theta);
+  
+  void make_precision_ahci(const arma::vec& theta);
+  void make_precision_hci(const arma::vec& theta);
+  void make_precision_hci_core(
+      Eigen::SparseMatrix<double> & H,
+      Eigen::SparseMatrix<double> & Ci,
+      double & prec_det,
+      const arma::vec& theta);
   
   arma::field<arma::uvec> dag;
   
-  //double ldens;
+  // info about model: 
+  // 0 = response
+  // 1 = latent CG
+  int model_type;
   
+  // stuff for latent model
+  arma::vec w;
+  double prec_det;
+  void new_w_logdens(); // update logdens after refreshing w
+  bool prec_inited;
+  
+  //double ldens;
   AptDAG(const arma::vec& y,
-    const arma::mat& coords, double rho);
+    const arma::mat& coords, double rho, int model=0,
+    int nthread=0);
   AptDAG(const arma::vec& y,
          const arma::mat& coords, 
-         const arma::field<arma::uvec>& custom_dag);
+         const arma::field<arma::uvec>& custom_dag,
+         int model=0,
+         int nthread=0);
   
   // utils
   arma::uvec oneuv;
+  int n_threads;
 };
 
 

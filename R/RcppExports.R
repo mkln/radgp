@@ -9,12 +9,12 @@ pred_from_dag <- function(coords, dag, theta, urng) {
     .Call(`_aptdag_pred_from_dag`, coords, dag, theta, urng)
 }
 
-aptdaggp <- function(coords, theta, rho) {
-    .Call(`_aptdag_aptdaggp`, coords, theta, rho)
+aptdaggp_latent <- function(y, coords, rho, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, num_prints = 10L) {
+    .Call(`_aptdag_aptdaggp_latent`, y, coords, rho, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, num_prints)
 }
 
-vecchiagp <- function(coords, theta, dag) {
-    .Call(`_aptdag_vecchiagp`, coords, theta, dag)
+aptdaggp_custom_latent <- function(y, coords, dag, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, num_prints = 10L) {
+    .Call(`_aptdag_aptdaggp_custom_latent`, y, coords, dag, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, num_prints)
 }
 
 aptdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints = 10L) {
@@ -23,6 +23,14 @@ aptdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, met
 
 aptdaggp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints = 10L) {
     .Call(`_aptdag_aptdaggp_custom`, y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints)
+}
+
+aptdaggp <- function(coords, theta, rho) {
+    .Call(`_aptdag_aptdaggp`, coords, theta, rho)
+}
+
+vecchiagp <- function(coords, theta, dag) {
+    .Call(`_aptdag_vecchiagp`, coords, theta, dag)
 }
 
 daggp_negdens <- function(y, coords, dag, theta, num_threads) {
@@ -75,5 +83,13 @@ aptdaggp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, num_t
 
 vecchiagp_response_predict <- function(cout, y, coords, dag, theta_mcmc, num_threads) {
     .Call(`_aptdag_vecchiagp_response_predict`, cout, y, coords, dag, theta_mcmc, num_threads)
+}
+
+aptdaggp_latent_predict <- function(cout, w, coords, rho, theta_mcmc, M, num_threads) {
+    .Call(`_aptdag_aptdaggp_latent_predict`, cout, w, coords, rho, theta_mcmc, M, num_threads)
+}
+
+vecchiagp_latent_predict <- function(cout, w, coords, dag, theta_mcmc, num_threads) {
+    .Call(`_aptdag_vecchiagp_latent_predict`, cout, w, coords, dag, theta_mcmc, num_threads)
 }
 

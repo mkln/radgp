@@ -9,3 +9,5 @@ importFrom(GPvecchia, "order_maxmin_exact")
 
 S3method("predict", "response.aptdag")
 S3method("predict", "response.vecchia")
+S3method("predict", "latent.aptdag")
+S3method("predict", "latent.vecchia")

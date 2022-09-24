@@ -9,10 +9,16 @@ predict.response.aptdag <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_
   }
   
   mcmc_burn <- ncol(obj$theta) - mcmc_keep
-  theta <- obj$theta[,-(1:mcmc_burn)]
+  if(mcmc_burn > 0){
+    param <- rbind(obj$theta[,-(1:mcmc_burn)],
+                   obj$nugg[-(1:mcmc_burn)])
+  } else {
+    param <- rbind(obj$theta, obj$nugg)
+  }
+  
   result <- aptdaggp_response_predict(newcoords, obj$y, 
                                       obj$coords, rho, 
-                                      theta, obj$M, n_threads)
+                                      param, obj$M, n_threads)
   
   return(result)
 }

@@ -1,4 +1,3 @@
-#define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
 #include "aptdag.h"
@@ -6,47 +5,6 @@
 #include "rama.h"
 
 using namespace std;
-
-
-//[[Rcpp::export]]
-Rcpp::List aptdaggp(const arma::mat& coords,
-                    const arma::vec& theta,
-                    double rho){
-  
-  arma::vec y = arma::randn(coords.n_rows);
-  AptDAG adag(y, coords, rho);
-  
-  adag.make_precision(theta);
-
-  double ldens = adag.logdens(theta);
-  
-  return Rcpp::List::create(
-    Rcpp::Named("dag") = adag.dag,
-    Rcpp::Named("ldens") = ldens,
-    Rcpp::Named("A") = adag.A,
-    Rcpp::Named("H") = adag.H,
-    Rcpp::Named("layers") = adag.layers
-  );
-}
-
-
-//[[Rcpp::export]]
-Rcpp::List vecchiagp(const arma::mat& coords,
-                    const arma::vec& theta,
-                    const arma::field<arma::uvec>& dag){
-  
-  arma::vec y = arma::randn(coords.n_rows);
-  AptDAG adag(y, coords, dag);
-  adag.make_precision(theta);
-  double ldens = adag.logdens(theta);
-  
-  return Rcpp::List::create(
-    Rcpp::Named("dag") = adag.dag,
-    Rcpp::Named("ldens") = ldens,
-    Rcpp::Named("A") = adag.A,
-    Rcpp::Named("H") = adag.H
-  );
-}
 
 void response_mcmc(AptDAG& adag, 
                    arma::mat& theta_mcmc,
@@ -164,7 +122,7 @@ Rcpp::List aptdaggp_response(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AptDAG adag(y, coords, rho);
+  AptDAG adag(y, coords, rho, 0, num_threads); // 0 for response
   
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
@@ -201,7 +159,7 @@ Rcpp::List aptdaggp_custom(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AptDAG adag(y, coords, dag);
+  AptDAG adag(y, coords, dag, 0, num_threads); // 0 for response
   
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
@@ -217,22 +175,5 @@ Rcpp::List aptdaggp_custom(const arma::vec& y,
 }
 
 
-
-//[[Rcpp::export]]
-double daggp_negdens(const arma::vec& y,
-                           const arma::mat& coords,
-                           const arma::field<arma::uvec>& dag,
-                           const arma::vec& theta,
-                           int num_threads){
-  
-  
-#ifdef _OPENMP
-  omp_set_num_threads(num_threads);
-#endif
-  
-  AptDAG adag(y, coords, dag);
-  
-  return adag.logdens(theta);
-}
 
 

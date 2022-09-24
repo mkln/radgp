@@ -65,6 +65,7 @@ arma::field<arma::uvec> neighbor_search_testset(const arma::mat& wtrain,
   }
   return Nset;
 }
+
 //[[Rcpp::export]]
 arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& Rset, 
                                                  int ntrain, arma::uvec& layers,
@@ -186,7 +187,7 @@ Rcpp::List aptdaggp_response_predict(const arma::mat& cout,
   arma::mat yout_mcmc = arma::zeros(ntest, mcmc);
   arma::mat random_stdnormal = arma::randn(mcmc, ntest);
   
-  Rcpp::Rcout << "AptDAG-GP predicting " << endl;
+  Rcpp::Rcout << "AptDAG-GP predicting (response model)" << endl;
 #ifdef _OPENMP
 #pragma omp parallel for 
 #endif
@@ -249,7 +250,7 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
   arma::vec ytemp = arma::zeros(ntrain+ntest);
   ytemp.subvec(0, ntrain-1) = y;
   
-  Rcpp::Rcout << "VecchiaGP predicting " << endl;
+  Rcpp::Rcout << "VecchiaGP predicting (response model)" << endl;
 #ifdef _OPENMP
 #pragma omp parallel for 
 #endif
@@ -282,4 +283,125 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
   }
   
   return yout_mcmc;
+}
+
+
+//[[Rcpp::export]]
+Rcpp::List aptdaggp_latent_predict(const arma::mat& cout,
+                                     const arma::mat& w, 
+                                     const arma::mat& coords, double rho,
+                                     const arma::mat& theta_mcmc, 
+                                     int M,
+                                     int num_threads){
+  arma::uvec oneuv = arma::ones<arma::uvec>(1);
+  
+  int ntrain = coords.n_rows;
+  int ntest = cout.n_rows;
+  int mcmc = theta_mcmc.n_cols;
+  arma::mat cxall = arma::join_vert(coords, cout);
+  
+  arma::uvec layers;
+  arma::field<arma::uvec> predict_dag = 
+    aptdagbuild_testset(coords, cout, rho, layers, M);
+  arma::uvec pred_order = arma::sort_index(layers);
+  
+  arma::mat wout_mcmc = arma::zeros(ntest, mcmc);
+  arma::mat random_stdnormal = arma::randn(mcmc, ntest);
+  arma::vec wtemp = arma::zeros(ntrain+ntest);
+  
+  Rcpp::Rcout << "AptDAG-GP predicting (latent model)" << endl;
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
+  for(int m=0; m<mcmc; m++){
+    arma::vec theta = theta_mcmc.col(m);
+    wtemp.subvec(0, ntrain-1) = w.col(m);
+    
+    for(int i=0; i<ntest; i++){
+      
+      int itarget = pred_order(ntrain+i);
+      int idagtarget = itarget - ntrain;
+      
+      arma::uvec ix = oneuv * (itarget);
+      arma::uvec px = predict_dag(idagtarget);
+      
+      arma::mat CC = Correlationf(cxall, ix, ix, 
+                                  theta, false, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, false, false);
+      arma::mat PPi = 
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, false, true) );
+      
+      arma::vec ht = PPi * CPt;
+      double sqrtR = sqrt( arma::conv_to<double>::from(
+        CC - CPt.t() * ht ) );
+      
+      wtemp(itarget) = arma::conv_to<double>::from(
+        ht.t() * wtemp(px) + random_stdnormal(m, i) * sqrtR );
+      
+      wout_mcmc(itarget-ntrain, m) = wtemp(itarget);
+    }
+    
+  }
+  
+  return Rcpp::List::create(
+    Rcpp::Named("wout") = wout_mcmc,
+    Rcpp::Named("predict_dag") = predict_dag,
+    Rcpp::Named("layers") = layers,
+    Rcpp::Named("pred_order") = pred_order
+  );
+}
+
+//[[Rcpp::export]]
+arma::mat vecchiagp_latent_predict(const arma::mat& cout,
+                                     const arma::mat& w, 
+                                     const arma::mat& coords, 
+                                     const arma::field<arma::uvec>& dag,
+                                     const arma::mat& theta_mcmc, 
+                                     int num_threads){
+  arma::uvec oneuv = arma::ones<arma::uvec>(1);
+  
+  int ntrain = coords.n_rows;
+  int ntest = cout.n_rows;
+  int mcmc = theta_mcmc.n_cols;
+  arma::mat cxall = arma::join_vert(coords, cout);
+  
+  arma::mat wout_mcmc = arma::zeros(ntest, mcmc);
+  arma::mat random_stdnormal = arma::randn(mcmc, ntest);
+  
+  arma::vec wtemp = arma::zeros(ntrain+ntest);
+
+  Rcpp::Rcout << "VecchiaGP predicting (latent model)" << endl;
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
+  for(int m=0; m<mcmc; m++){
+    arma::vec theta = theta_mcmc.col(m);
+    wtemp.subvec(0, ntrain-1) = w.col(m);
+    
+    for(int i=0; i<ntest; i++){
+      
+      int itarget = ntrain+i;
+      
+      arma::uvec ix = oneuv * (itarget);
+      arma::uvec px = dag(itarget);
+      
+      arma::mat CC = Correlationf(cxall, ix, ix, 
+                                  theta, false, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, false, false);
+      arma::mat PPi = 
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, false, true) );
+      
+      arma::vec ht = PPi * CPt;
+      double sqrtR = sqrt( arma::conv_to<double>::from(
+        CC - CPt.t() * ht ) );
+      
+      wtemp(itarget) = arma::conv_to<double>::from(
+        ht.t() * wtemp(px) + random_stdnormal(m, i) * sqrtR );
+      
+      wout_mcmc(itarget-ntrain, m) = wtemp(itarget);
+    }
+    
+  }
+  
+  return wout_mcmc;
 }
