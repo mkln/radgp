@@ -21,7 +21,7 @@ nall <- nrow(coords_all)
 
 # gen data from full GP
 # theta : phi, sigmasq, nu, nugg
-theta <- c(30, 1, 1.6, 0)
+theta <- c(19.97, 1, 1, 0)
 nugget <- .1
 
 CC <- aptdag::Correlationc(coords_all, coords_all, theta, TRUE)
@@ -51,7 +51,7 @@ df %>% head(ntrain) %>%
 
 ################################################################# MCMC 
 ###############################################################################
-mcmc <- 500
+mcmc <- 2500
 
 ## setup MCMC for theta and nugget
 ## common to all models

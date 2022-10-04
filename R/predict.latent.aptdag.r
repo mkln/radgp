@@ -12,7 +12,7 @@ predict.latent.aptdag <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_th
   if(mcmc_burn > 0){
     theta <- obj$theta[,-(1:mcmc_burn)]
     w <- obj$w[,-(1:mcmc_burn)]
-    nugg <- obj$nugg[,-(1:mcmc_burn)]
+    nugg <- obj$nugg[-(1:mcmc_burn)]
   } else {
     theta <- obj$theta
     w <- obj$w
@@ -23,10 +23,12 @@ predict.latent.aptdag <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_th
   result <- aptdaggp_latent_predict(newcoords, w, 
                                       obj$coords, rho, 
                                       theta, obj$M, n_threads)
-  
+
   nout <- nrow(result$wout)
-  tau_mcmc <- t(matrix(1, ncol=nout, nrow=1) %x% nugg)^.5
+  tau_mcmc <- matrix(1, nrow=nout, ncol=1) %*% matrix(nugg^.5, nrow=1, ncol=mcmc_keep)
   yout <- result$wout + tau_mcmc * matrix(rnorm(nout * mcmc_keep), ncol=mcmc_keep)
-  
-  return(c(result, list(yout=yout)))
+
+  return(list(yout = yout,
+              wout = result$wout))
 }
+

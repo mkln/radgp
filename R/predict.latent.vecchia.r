@@ -7,7 +7,7 @@ predict.latent.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1, 
   if(mcmc_burn > 0){
     theta <- obj$theta[,-(1:mcmc_burn)]
     w <- obj$w[,-(1:mcmc_burn)]
-    nugg <- obj$nugg[,-(1:mcmc_burn)]
+    nugg <- obj$nugg[-(1:mcmc_burn)]
   } else {
     theta <- obj$theta
     w <- obj$w
@@ -44,11 +44,11 @@ predict.latent.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1, 
     dag <- nn_dag
     ord <- NULL
   }
-  
+
   nout <- nrow(wout)
-  tau_mcmc <- t(matrix(1, ncol=nout, nrow=1) %x% nugg)^.5
+  tau_mcmc <- matrix(1, nrow=nout, ncol=1) %*% matrix(nugg^.5, nrow=1, ncol=mcmc_keep)
   yout <- wout + tau_mcmc * matrix(rnorm(nout * mcmc_keep), ncol=mcmc_keep)
-  
+
   return(list(yout = yout,
               wout = wout,
               dag = dag,
