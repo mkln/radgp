@@ -6,7 +6,7 @@ library(aptdag)
 
 ################################################################# data
 ###############################################################################
-ntrain <- 1500
+ntrain <- 5000
 
 set.seed(10)
 
@@ -21,8 +21,8 @@ nall <- nrow(coords_all)
 
 # gen data from full GP
 # theta : phi, sigmasq, nu, nugg
-theta <- c(19.97, 1, 1, 0)
-nugget <- .1
+theta <- c(19.97, 1, 1.2, 0)
+nugget <- 1e-5
 
 CC <- aptdag::Correlationc(coords_all, coords_all, theta, TRUE)
 LC <- t(chol(CC))
@@ -65,14 +65,14 @@ theta_unif_bounds[3,] <- c(1.001, 2-.001) # nu
 nugget_start <- c(.5)
 
 
-
 #################################################################### Apt DAG GP
 ###############################################################################
 # Preliminary : check size of conditioning set
 system.time({
-  dag <- Raptdagbuild(coords_train, rho <- 0.1)
+  dag <- Raptdagbuild(coords_train, rho <- 0.05)
 })
-dag$dag %>% sapply(length) %>% mean()
+dag$dag %>% sapply(length) %>% summary()
+
 # visual
 plot(coords_train[10,,drop=F], xlim=c(0,1), ylim=c(0,1), pch=19, cex=.8, col="blue")
 points(coords_train[dag$dag[[10]]+1,], pch=19, cex=.8, col="red")
@@ -82,8 +82,11 @@ system.time({
   aptdag_latent <- latent.model(y_train, coords_train, rho=rho, 
                                theta_start=theta_start,
                                theta_prior=theta_unif_bounds,
-                               mcmc=mcmc, n_threads=16, printn=10)
+                               tausq_start=nugget,
+                               tausq_prior = c(0,0),
+                               mcmc=mcmc, n_threads=16, printn=20)
 })
+
 # posterior mean for theta
 aptdag_latent$theta %>% apply(1, mean)
 # predictions

@@ -29,6 +29,7 @@ predict.latent.aptdag <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_th
   yout <- result$wout + tau_mcmc * matrix(rnorm(nout * mcmc_keep), ncol=mcmc_keep)
 
   return(list(yout = yout,
-              wout = result$wout))
+              wout = result$wout,
+              dag = result$dag))
 }
 

@@ -224,7 +224,7 @@ Rcpp::List aptdaggp_response_predict(const arma::mat& cout,
   
   return Rcpp::List::create(
     Rcpp::Named("yout") = yout_mcmc,
-    Rcpp::Named("predict_dag") = predict_dag,
+    Rcpp::Named("dag") = predict_dag,
     Rcpp::Named("layers") = layers,
     Rcpp::Named("pred_order") = pred_order
   );
@@ -345,7 +345,7 @@ Rcpp::List aptdaggp_latent_predict(const arma::mat& cout,
   
   return Rcpp::List::create(
     Rcpp::Named("wout") = wout_mcmc,
-    Rcpp::Named("predict_dag") = predict_dag,
+    Rcpp::Named("dag") = predict_dag,
     Rcpp::Named("layers") = layers,
     Rcpp::Named("pred_order") = pred_order
   );
