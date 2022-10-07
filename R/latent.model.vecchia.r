@@ -2,6 +2,7 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
                                  theta_start=NULL, 
                                  theta_prior=NULL,
                                  tausq_start=NULL,
+                                 tausq_prior=NULL,
                                  unif_bounds=NULL, printn=10){
   
   if(is.null(theta_start)){
@@ -27,11 +28,6 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   if(is.null(tausq_prior)){
     tausq_prior <- c(2, 1)
   }
-  if(all(tausq_prior == 0)){
-    sample_tausq <- FALSE
-  } else {
-    sample_tausq <- TRUE
-  }
   
   unif_bounds <- rbind(unif_bounds, theta_start[4] + c(-1e-9, +1e-9))
   
@@ -47,7 +43,7 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
     latent_model <- aptdaggp_custom_latent(y_mm, coords_mm, nn_dag, mcmc, n_threads,
                                       theta_start, tausq_start,
                                       metrop_sd, unif_bounds, 
-                                      sample_tausq, printn) })
+                                      tausq_prior, printn) })
   
   latent_model$theta <- latent_model$theta[1:3,]
   

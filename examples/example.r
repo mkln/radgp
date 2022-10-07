@@ -83,7 +83,7 @@ system.time({
                                theta_start=theta_start,
                                theta_prior=theta_unif_bounds,
                                tausq_start=nugget,
-                               tausq_prior = c(0,0),
+                               tausq_prior = c(2.01, 1.01),
                                mcmc=mcmc, n_threads=16, printn=20)
 })
 
@@ -114,6 +114,8 @@ system.time({
   vecchia_latent <- latent.model.vecchia(y_train, coords_train, m=25,
                                          theta_start=theta_start,
                                          theta_prior=theta_unif_bounds,
+                                         tausq_start=nugget,
+                                         tausq_prior = c(2.01, 1.01),
                                          mcmc=mcmc, n_threads=16, printn=10)
 })
 # posterior mean for theta

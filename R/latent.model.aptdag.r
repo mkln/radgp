@@ -28,11 +28,6 @@ latent.model <- function(y, coords, rho, mcmc, n_threads,
   if(is.null(tausq_prior)){
     tausq_prior <- c(2, 1)
   }
-  if(all(tausq_prior == 0)){
-    sample_tausq <- FALSE
-  } else {
-    sample_tausq <- TRUE
-  }
   
   unif_bounds <- rbind(unif_bounds, theta_start[4] + c(-1e-9, +1e-9))
   
@@ -41,7 +36,7 @@ latent.model <- function(y, coords, rho, mcmc, n_threads,
     aptdag_model <- aptdaggp_latent(y, coords_train, rho=rho, mcmc, n_threads,
                                     theta_start, tausq_start, 
                                     metrop_sd, unif_bounds, 
-                                    sample_tausq, printn) })
+                                    tausq_prior, printn) })
   
   aptdag_model$theta <- aptdag_model$theta[1:3,]
   

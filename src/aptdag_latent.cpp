@@ -32,7 +32,7 @@ void latent_mcmc(AptDAG& adag,
                    double tausq_init,
                    double metrop_sd,
                    const arma::mat& theta_unif_bounds,
-                   bool sample_tausq = true,
+                   const arma::vec& tausq_prior,
                    int print_every=10){
   
   // timers
@@ -76,6 +76,8 @@ void latent_mcmc(AptDAG& adag,
   
   // timing
   arma::vec timing(4);
+  
+  bool sample_tausq = arma::any(tausq_prior != 0);
   
   for(int m=0; m<mcmc; m++){
     // w
@@ -165,8 +167,8 @@ void latent_mcmc(AptDAG& adag,
 
     if(sample_tausq){
       // tausq
-      double aprior = 2;
-      double bprior = 1;
+      double aprior = tausq_prior(0);
+      double bprior = tausq_prior(0);
       
       arma::mat yrr = adag.y - 
         //XB
@@ -231,7 +233,7 @@ Rcpp::List aptdaggp_latent(const arma::vec& y,
                     double tausq_init,
                     double metrop_sd,
                     const arma::mat& theta_unif_bounds,
-                    bool sample_tausq = true,
+                    const arma::vec& tausq_prior,
                     int num_prints = 10){
   
   int print_every = num_prints>0? round(mcmc/num_prints) : 0;
@@ -250,7 +252,7 @@ Rcpp::List aptdaggp_latent(const arma::vec& y,
   latent_mcmc(adag, theta_mcmc, w_mcmc, tausq_mcmc, 
               logdens_mcmc, 
               mcmc, theta_init, tausq_init,
-              metrop_sd, theta_unif_bounds, sample_tausq, print_every);
+              metrop_sd, theta_unif_bounds, tausq_prior, print_every);
 
   return Rcpp::List::create(
     Rcpp::Named("M") = adag.M,
@@ -276,7 +278,7 @@ Rcpp::List aptdaggp_custom_latent(const arma::vec& y,
                              double tausq_init,
                              double metrop_sd,
                              const arma::mat& theta_unif_bounds,
-                             bool sample_tausq = true,
+                             const arma::vec& tausq_prior,
                              int num_prints = 10){
   
   int print_every = num_prints>0? round(mcmc/num_prints) : 0;
@@ -297,7 +299,7 @@ Rcpp::List aptdaggp_custom_latent(const arma::vec& y,
               logdens_mcmc, 
               mcmc, theta_init, tausq_init, 
               metrop_sd, theta_unif_bounds, 
-              sample_tausq, print_every);
+              tausq_prior, print_every);
     
     return Rcpp::List::create(
       Rcpp::Named("M") = adag.M,
