@@ -13,6 +13,7 @@ void response_mcmc(AptDAG& adag,
                    const arma::vec& theta_init,
                    double metrop_sd,
                    const arma::mat& theta_unif_bounds,
+                   const arma::vec& tausq_prior,
                    int print_every=10){
   
   // timers
@@ -48,7 +49,9 @@ void response_mcmc(AptDAG& adag,
     double proposal_logdens = adag.logdens(new_param);
     
     double prior_logratio = 
-      calc_prior_logratio(new_param.subvec(1,2), theta.subvec(1,2)); // ig
+      calc_prior_logratio(new_param.subvec(1,2), theta.subvec(1,2)) + // ig sigmasq
+      calc_prior_logratio(new_param.tail(1), theta.tail(1), tausq_prior(0), tausq_prior(1)); // ig nugget
+    
     double jacobian = calc_jacobian(new_param, theta, theta_unif_bounds);
     
     double logaccept = proposal_logdens - current_logdens + 
@@ -114,6 +117,7 @@ Rcpp::List aptdaggp_response(const arma::vec& y,
                     const arma::vec& theta_init,
                     double metrop_sd,
                     const arma::mat& theta_unif_bounds,
+                    const arma::vec& tausq_prior,
                     int num_prints = 10){
   
   int print_every = num_prints>0? round(mcmc/num_prints) : 0;
@@ -127,7 +131,8 @@ Rcpp::List aptdaggp_response(const arma::vec& y,
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
   
-  response_mcmc(adag, theta_mcmc, logdens_mcmc, mcmc, theta_init, metrop_sd, theta_unif_bounds, print_every);
+  response_mcmc(adag, theta_mcmc, logdens_mcmc, mcmc, theta_init, metrop_sd, theta_unif_bounds, 
+                tausq_prior, print_every);
 
   return Rcpp::List::create(
     Rcpp::Named("M") = adag.M,
@@ -150,6 +155,7 @@ Rcpp::List aptdaggp_custom(const arma::vec& y,
                              const arma::vec& theta_init,
                              double metrop_sd,
                              const arma::mat& theta_unif_bounds,
+                             const arma::vec& tausq_prior,
                              int num_prints = 10){
   
   int print_every = num_prints>0? round(mcmc/num_prints) : 0;
@@ -164,7 +170,8 @@ Rcpp::List aptdaggp_custom(const arma::vec& y,
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
   
-  response_mcmc(adag, theta_mcmc, logdens_mcmc, mcmc, theta_init, metrop_sd, theta_unif_bounds, print_every);
+  response_mcmc(adag, theta_mcmc, logdens_mcmc, mcmc, theta_init, metrop_sd, theta_unif_bounds, 
+                tausq_prior, print_every);
     
     return Rcpp::List::create(
       Rcpp::Named("M") = adag.M,

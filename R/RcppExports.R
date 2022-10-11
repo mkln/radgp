@@ -17,12 +17,12 @@ aptdaggp_custom_latent <- function(y, coords, dag, mcmc, num_threads, theta_init
     .Call(`_aptdag_aptdaggp_custom_latent`, y, coords, dag, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
 }
 
-aptdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints = 10L) {
-    .Call(`_aptdag_aptdaggp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints)
+aptdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
+    .Call(`_aptdag_aptdaggp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
 }
 
-aptdaggp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints = 10L) {
-    .Call(`_aptdag_aptdaggp_custom`, y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints)
+aptdaggp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
+    .Call(`_aptdag_aptdaggp_custom`, y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
 }
 
 aptdaggp <- function(coords, theta, rho) {

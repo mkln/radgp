@@ -25,10 +25,9 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   }
   
   if(is.null(nugg_prior)){
-    unif_bounds <- rbind(unif_bounds, c(1e-5, 10))
-  } else {
-    unif_bounds <- rbind(unif_bounds, nugg_prior)
+    nugg_prior <- c(2, 1)
   }
+  unif_bounds <- rbind(unif_bounds, c(1e-7, Inf))
   
   metrop_sd <- 0.15
   
@@ -40,7 +39,8 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   
   maxmin_time <- system.time({    
     response_model <- aptdaggp_custom(y_mm, coords_mm, nn_dag, mcmc, n_threads,
-                                      param_start, metrop_sd, unif_bounds, printn) })
+                                      param_start, metrop_sd, unif_bounds, 
+                                      nugg_prior, printn) })
   
   result <- c(response_model, list(
     dag=nn_dag,

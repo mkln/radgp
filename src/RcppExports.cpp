@@ -82,8 +82,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // aptdaggp_response
-Rcpp::List aptdaggp_response(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds, int num_prints);
-RcppExport SEXP _aptdag_aptdaggp_response(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP num_printsSEXP) {
+Rcpp::List aptdaggp_response(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
+RcppExport SEXP _aptdag_aptdaggp_response(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -95,14 +95,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type theta_init(theta_initSEXP);
     Rcpp::traits::input_parameter< double >::type metrop_sd(metrop_sdSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_unif_bounds(theta_unif_boundsSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type tausq_prior(tausq_priorSEXP);
     Rcpp::traits::input_parameter< int >::type num_prints(num_printsSEXP);
-    rcpp_result_gen = Rcpp::wrap(aptdaggp_response(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints));
+    rcpp_result_gen = Rcpp::wrap(aptdaggp_response(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
     return rcpp_result_gen;
 END_RCPP
 }
 // aptdaggp_custom
-Rcpp::List aptdaggp_custom(const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds, int num_prints);
-RcppExport SEXP _aptdag_aptdaggp_custom(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP num_printsSEXP) {
+Rcpp::List aptdaggp_custom(const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
+RcppExport SEXP _aptdag_aptdaggp_custom(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -114,8 +115,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type theta_init(theta_initSEXP);
     Rcpp::traits::input_parameter< double >::type metrop_sd(metrop_sdSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_unif_bounds(theta_unif_boundsSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type tausq_prior(tausq_priorSEXP);
     Rcpp::traits::input_parameter< int >::type num_prints(num_printsSEXP);
-    rcpp_result_gen = Rcpp::wrap(aptdaggp_custom(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, num_prints));
+    rcpp_result_gen = Rcpp::wrap(aptdaggp_custom(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -364,8 +366,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_aptdag_pred_from_dag", (DL_FUNC) &_aptdag_pred_from_dag, 4},
     {"_aptdag_aptdaggp_latent", (DL_FUNC) &_aptdag_aptdaggp_latent, 11},
     {"_aptdag_aptdaggp_custom_latent", (DL_FUNC) &_aptdag_aptdaggp_custom_latent, 11},
-    {"_aptdag_aptdaggp_response", (DL_FUNC) &_aptdag_aptdaggp_response, 9},
-    {"_aptdag_aptdaggp_custom", (DL_FUNC) &_aptdag_aptdaggp_custom, 9},
+    {"_aptdag_aptdaggp_response", (DL_FUNC) &_aptdag_aptdaggp_response, 10},
+    {"_aptdag_aptdaggp_custom", (DL_FUNC) &_aptdag_aptdaggp_custom, 10},
     {"_aptdag_aptdaggp", (DL_FUNC) &_aptdag_aptdaggp, 3},
     {"_aptdag_vecchiagp", (DL_FUNC) &_aptdag_vecchiagp, 3},
     {"_aptdag_daggp_negdens", (DL_FUNC) &_aptdag_daggp_negdens, 5},

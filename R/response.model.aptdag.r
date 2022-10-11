@@ -26,15 +26,15 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
   }
   
   if(is.null(nugg_prior)){
-    unif_bounds <- rbind(unif_bounds, c(1e-5, 10))
-  } else {
-    unif_bounds <- rbind(unif_bounds, nugg_prior)
+    nugg_prior <- c(2, 1)
   }
+  unif_bounds <- rbind(unif_bounds, c(1e-7, Inf))
   
   metrop_sd <- 0.15
   aptdag_time <- system.time({
     aptdag_model <- aptdaggp_response(y, coords_train, rho=rho, mcmc, n_threads,
-                                      param_start, metrop_sd, unif_bounds, printn) })
+                                      param_start, metrop_sd, unif_bounds, 
+                                      nugg_prior, printn) })
   
   result <- c(aptdag_model, list(time=aptdag_time))
   

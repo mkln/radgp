@@ -1,8 +1,8 @@
 latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
                                  theta_start=NULL, 
                                  theta_prior=NULL,
-                                 tausq_start=NULL,
-                                 tausq_prior=NULL,
+                                 nugg_start=NULL,
+                                 nugg_prior=NULL,
                                  unif_bounds=NULL, printn=10){
   
   if(is.null(theta_start)){
@@ -11,8 +11,8 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
     theta_start[4] <- 1e-8
   }
   
-  if(is.null(tausq_start)){
-    tausq_start <- 1
+  if(is.null(nugg_start)){
+    nugg_start <- 1
   }
   
   if(is.null(theta_prior)){
@@ -25,8 +25,8 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
     unif_bounds <- theta_prior[1:3, ]
   }
   
-  if(is.null(tausq_prior)){
-    tausq_prior <- c(2, 1)
+  if(is.null(nugg_prior)){
+    nugg_prior <- c(2, 1)
   }
   
   unif_bounds <- rbind(unif_bounds, theta_start[4] + c(-1e-9, +1e-9))
@@ -41,9 +41,9 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   
   maxmin_time <- system.time({    
     latent_model <- aptdaggp_custom_latent(y_mm, coords_mm, nn_dag, mcmc, n_threads,
-                                      theta_start, tausq_start,
+                                      theta_start, nugg_start,
                                       metrop_sd, unif_bounds, 
-                                      tausq_prior, printn) })
+                                      nugg_prior, printn) })
   
   latent_model$theta <- latent_model$theta[1:3,]
   

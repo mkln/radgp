@@ -82,8 +82,8 @@ system.time({
   aptdag_latent <- latent.model(y_train, coords_train, rho=rho, 
                                theta_start=theta_start,
                                theta_prior=theta_unif_bounds,
-                               tausq_start=nugget,
-                               tausq_prior = c(2.01, 1.01),
+                               nugg_start=nugget,
+                               nugg_prior=c(.001, .001),
                                mcmc=mcmc, n_threads=16, printn=20)
 })
 
@@ -98,6 +98,8 @@ system.time({
   aptdag_response <- response.model(y_train, coords_train, rho=rho, 
                                theta_start=theta_start,
                                theta_prior=theta_unif_bounds,
+                               nugg_start=nugget,
+                               nugg_prior=c(.001, .001),
                                mcmc=mcmc, n_threads=16, printn=10)
 })
 # posterior mean for theta
@@ -114,8 +116,8 @@ system.time({
   vecchia_latent <- latent.model.vecchia(y_train, coords_train, m=25,
                                          theta_start=theta_start,
                                          theta_prior=theta_unif_bounds,
-                                         tausq_start=nugget,
-                                         tausq_prior = c(2.01, 1.01),
+                                         nugg_start=nugget,
+                                         nugg_prior = c(2.01, 1.01),
                                          mcmc=mcmc, n_threads=16, printn=10)
 })
 # posterior mean for theta
