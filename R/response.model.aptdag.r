@@ -3,6 +3,7 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
                            theta_prior=NULL, 
                            nugg_start=NULL,
                            nugg_prior=NULL,
+                           nugg_bounds=NULL,
                            printn=10){
   
   if(is.null(theta_start)){
@@ -28,7 +29,10 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
   if(is.null(nugg_prior)){
     nugg_prior <- c(2, 1)
   }
-  unif_bounds <- rbind(unif_bounds, c(1e-7, Inf))
+  if(is.null(nugg_bounds)){
+    nugg_bounds = c(1e-7, Inf)
+  } 
+  unif_bounds <- rbind(unif_bounds, nugg_bounds)
   
   metrop_sd <- 0.15
   aptdag_time <- system.time({

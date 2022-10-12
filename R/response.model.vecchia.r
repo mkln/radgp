@@ -2,7 +2,8 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
                                    theta_start=NULL, 
                                    theta_prior=NULL, 
                                    nugg_start=NULL,
-                                   nugg_prior=NULL, printn=10){
+                                   nugg_prior=NULL, 
+                                   nugg_bounds=NULL, printn=10){
   
   if(is.null(theta_start)){
     theta_start <- c(5, 1, 1.5)  
@@ -27,7 +28,10 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   if(is.null(nugg_prior)){
     nugg_prior <- c(2, 1)
   }
-  unif_bounds <- rbind(unif_bounds, c(1e-7, Inf))
+  if(is.null(nugg_bounds)){
+    nugg_bounds = c(1e-7, Inf)
+  } 
+  unif_bounds <- rbind(unif_bounds, nugg_bounds)
   
   metrop_sd <- 0.15
   
