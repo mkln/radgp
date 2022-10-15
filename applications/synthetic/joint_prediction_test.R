@@ -93,9 +93,9 @@ fun_exp <- function(v){
 
 ##-----------------------------------------------------------------------
 ## Specify global parameter
-model='latent'
-# model='response'
-nexp = 2  ## total number of iterations
+# model='latent'
+model='response'
+nexp = 20  ## total number of iterations
 fun_lst = c(max, mean, sd, fun_relu, median, fun_max_min)
 fun_label = c('max', 'mean', 'sd', 'relu', 'median', 'fun_max_min')
 if (model=='latent'){
@@ -105,12 +105,19 @@ if (model=='latent'){
 }
 cov_thre = 0.05
 x_thre = 0.15
-theta = c(15, 1, 1, 10^{-5})
+theta = c(19.97, 1, 1, 10^{-5})
 theta[1] = - log(cov_thre/theta[2]) / x_thre^theta[3]
 plates = matrix(c(0.15,0.25,0.45,0.55,0.75,0.85),nrow=2)
 n_region = ncol(plates)^2
 W2_fun_tensor = array(rnorm(n_region*3*nexp*length(fun_lst)),dim=c(n_region,3,nexp,length(fun_lst)))
 time_ls = matrix(0,nrow=nexp,ncol=3)
+aptdag_theta_mean_lst = matrix(0,nrow=nexp,ncol=3)
+nngp_theta_mean_lst = matrix(0,nrow=nexp,ncol=3)
+nugget_mean_lst = matrix(0,nrow=nexp,ncol=2)
+
+m = 6
+rho = 0.055
+rho_test = rho
 
 for (iexp in 1:nexp){
   region_valid = FALSE
@@ -125,7 +132,7 @@ for (iexp in 1:nexp){
     ntest = nrow(coords_test)
     nall = ntrain + ntest
     coords_all = rbind(coords_train, coords_test)
-
+    
     #-------------------------------------------------------------------------
     ## set local regions
     region_lst = vector(mode='list',length=n_region)
@@ -167,26 +174,47 @@ for (iexp in 1:nexp){
   }
   
   ##------------------------------------------------------------------ aptdag model 
-  mcmc <- 5000
-  unif_bounds <- matrix(nrow=3, ncol=2)
-  unif_bounds[1,] <- c(1, 300) # phi
-  unif_bounds[2,] <- c(.1, 10) # sigmasq
-  unif_bounds[3,] <- c(0.75, 2-.001) # nu
-  nugg_bounds <- c(0.5*1e-5, 1.5*1e-5) # nugget for response model
-  theta_start <- c(50, 1, 1.5)
+  mcmc <- 2500
+  # unif_bounds <- matrix(nrow=3, ncol=2)
+  # unif_bounds[1,] <- c(1, 300) # phi
+  # unif_bounds[2,] <- c(.1, 10) # sigmasq
+  # unif_bounds[3,] <- c(0.75, 2-.001) # nu
+  # nugg_bounds <- c(0.5*1e-5, 1.5*1e-5) # nugget for response model
+  # theta_start <- c(50, 1, 1.5)
   
-  rho = 0.050
-  rho_test = rho
+  theta_start <- c(30, 1, 1)
+  theta_unif_bounds <- matrix(nrow=3, ncol=2)
+  theta_unif_bounds[1,] <- c(5, 100) # phi
+  theta_unif_bounds[2,] <- c(.2, 10) # sigmasq
+  theta_unif_bounds[3,] <- c(0.9, 2-.001) # nu
+  # theta_unif_bounds[3,] <- c(0.999,1.001)
+  if (model=='latent'){
+    nugget_start <- nugget
+  } else{
+    nugget_start <- 1e-5
+    nugg_bounds <- c(1e-7,1e-4)
+  }
+  nugget_prior <- c(0.001, 0.001)
+  
   
   if (model=='latent'){
     t0 = Sys.time()
-    altdag_model <- latent.model(y_train, coords_train, theta_start=theta_start,
-                                   theta_prior=unif_bounds, rho=rho, mcmc=mcmc, n_threads=16, printn=0)
+    altdag_model <- latent.model(y_train, coords_train, rho=rho, 
+                                 theta_start=theta_start,
+                                 theta_prior=theta_unif_bounds,
+                                 nugg_start=nugget_start,
+                                 nugg_prior=nugget_prior,
+                                 mcmc=mcmc, n_threads=16, printn=1)
     t1 = Sys.time()      
   } else{
     t0 = Sys.time()
-    altdag_model <- response.model(y_train, coords_train, theta_start=theta_start,
-                                   theta_prior=unif_bounds, nugg_prior=nugg_bounds, rho=rho, mcmc=mcmc, n_threads=16, printn=0)
+    altdag_model <- response.model(y_train, coords_train, rho=rho, 
+                                   theta_start=theta_start,
+                                   theta_prior=theta_unif_bounds,
+                                   nugg_start=nugget_start,
+                                   nugg_prior=nugget_prior,
+                                   nugg_bounds=nugg_bounds,
+                                   mcmc=mcmc, n_threads=16, printn=1)
     t1 = Sys.time()  
   }
   
@@ -203,31 +231,38 @@ for (iexp in 1:nexp){
   # m_alt = mean(sapply(altdag_model$dag, length))
   # m_alt_test = mean(sapply(altdag_predict$predict_dag, length))
   # c(m_alt,m_alt_test)
-
+  
   ##-------------------------------------------------------------------------
   ## nngp model
   # vecchia-maxmin estimation MCMC
-  m = 6
+  
   if (model=='latent'){
     t3 = Sys.time()
-    maxmin_model <- latent.model.vecchia(y_train, coords_train, m=m, theta_start=theta_start,
-                                           theta_prior=unif_bounds,
-                                           mcmc=mcmc, n_threads=16, printn=0)
+    maxmin_model <- latent.model.vecchia(y_train, coords_train, m=m,
+                                         theta_start=theta_start,
+                                         theta_prior=theta_unif_bounds,
+                                         nugg_start=nugget_start,
+                                         nugg_prior=nugget_prior,
+                                         mcmc=mcmc, n_threads=16, printn=1)
     t4 = Sys.time()    
   } else{
     t3 = Sys.time()
-    maxmin_model <- reponse.model.vecchia(y_train, coords_train, m=m, theta_start=theta_start,
-                                         theta_prior=unif_bounds, nugg_prior=nugg_bounds,
-                                         mcmc=mcmc, n_threads=16, printn=0)
+    maxmin_model <- response.model.vecchia(y_train, coords_train, m=m, 
+                                           theta_start=theta_start,
+                                           theta_prior=theta_unif_bounds,
+                                           nugg_start=nugget_start,
+                                           nugg_prior=nugget_prior,
+                                           nugg_bounds=nugg_bounds,
+                                           mcmc=mcmc, n_threads=16, printn=1)
     t4 = Sys.time()      
   }
-
+  
   # NNGP prediction
   nngp_predict <- predict(maxmin_model, coords_test, mcmc_keep=mc_true, n_threads=16, independent=FALSE)
   t5 = Sys.time()
   inngp_predict <- predict(maxmin_model, coords_test, mcmc_keep=mc_true, n_threads=16, independent=TRUE)
   t6 = Sys.time()
-
+  
   if (model=='latent'){
     znngp_mc <- t(nngp_predict$wout)
     zinngp_mc <- t(inngp_predict$wout)
@@ -239,15 +274,18 @@ for (iexp in 1:nexp){
   ##------------------------------------------------------------------------------
   ## print time
   # print(c(m_alt, m_alt_test))
+  aptdag_theta_mean_lst[iexp,] = apply(altdag_model$theta[,-(1:(mcmc-mc_true))],1,mean)
+  nngp_theta_mean_lst[iexp,] = apply(maxmin_model$theta[,-(1:(mcmc-mc_true))],1,mean)
+  nugget_mean_lst[iexp,] = c(mean(altdag_model$nugg[-(1:(mcmc-mc_true))]),mean(maxmin_model$nugg[-(1:(mcmc-mc_true))]))
   print(paste('Alt DAG training time: ', t1-t0, ', testing time: ', t2-t1, ', total time: ', t2-t0, sep=''))
   print(paste('NNGP training time: ', t4-t3, ', testing time: ', t5-t4, ', total time: ', t5-t3, sep=''))
   print(paste('i-NNGP total time: ', t4-t3, ', testing time: ', t6-t5, ', total time: ', t6-t5+t4-t3, sep=''))
-  print(paste('Apt DAG theta mean: ', apply(altdag_model$theta[,-(1:(mcmc-mc_true))],1,mean)))
-  print(paste('Vecchia maxmin theta mean: ', apply(maxmin_model$theta[,-(1:(mcmc-mc_true))],1,mean)))
+  print(paste('Apt DAG theta mean: '))
+  print(aptdag_theta_mean_lst[iexp,])
+  print(paste('Vecchia maxmin theta mean: '))
+  print(nngp_theta_mean_lst[iexp,])
+  print(paste('Apt nugget mean: ', nugget_mean_lst[iexp,1], ' vecchia nugget mean: ', nugget_mean_lst[iexp,2], sep=''))
   time_ls[iexp,] = c(t2-t0,t5-t3,t6-t5+t4-t3)
-  
-  ##----------------------------------------------------------------------------
-
   
   ##----------------------------------------------------------------------------
   ## Compare true mc samples with altdag mcmc samples on maxima of local regions
@@ -314,6 +352,11 @@ for (l in 1:3){
 
 print(paste('time:', mean(time_ls[,1]), mean(time_ls[,2]), mean(time_ls[,3])))
 print(paste('theta:',theta[1], theta[2], theta[3], theta[4]))
+print('aptdag overall mean theta:')
+print(apply(aptdag_theta_mean_lst,2,mean))
+print('vecchia overall mean theta')
+print(apply(nngp_theta_mean_lst,2,mean))
+print(paste('Apt nugget mean: ', mean(nugget_mean_lst[,1]), ' vecchia nugget mean: ', mean(nugget_mean_lst[iexp,2]), sep=''))
 for (k in 1:length(fun_lst)){
   print(paste('fun:', fun_label[[k]]))
   print(fun_summary[,,k])
