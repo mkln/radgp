@@ -168,7 +168,7 @@ void latent_mcmc(AptDAG& adag,
     if(sample_tausq){
       // tausq
       double aprior = tausq_prior(0);
-      double bprior = tausq_prior(0);
+      double bprior = tausq_prior(1);
       
       arma::mat yrr = adag.y - 
         //XB
