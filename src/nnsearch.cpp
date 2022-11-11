@@ -147,7 +147,6 @@ arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset,
       int x = Rset(i)(jx);
       layers_ne(jx) = layers(x);
     }
-    
     Nset(i) = Rset(i)(arma::find(layers_ne<layers(i)));
   }
   

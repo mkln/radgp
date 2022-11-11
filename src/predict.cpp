@@ -1,5 +1,6 @@
 #include "predict.h"
 
+
 arma::umat make_candidates_testset(const arma::mat& w, 
                                    const arma::uvec& indsort, arma::uvec& testindsort,
                                    unsigned int col,
@@ -69,7 +70,7 @@ arma::field<arma::uvec> neighbor_search_testset(const arma::mat& wtrain,
 //[[Rcpp::export]]
 arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& Rset, 
                                                  int ntrain, arma::uvec& layers,
-                                                 int Mmin){
+                                                 int Mmin, const arma::mat& wtrain, const arma::mat& wtest){
   int ntest = Rset.n_elem;
   int nr = ntrain + ntest;
   int M = Mmin;
@@ -138,6 +139,134 @@ arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& 
     }
     Nset(i) = Rset(i)(arma::find(layers_ne<layers(i+ntrain)));
   }
+
+  // add training parents for testing locations with no parents
+  arma::uvec indsort0 = arma::sort_index(wtrain.col(0));
+  for (int ni=1; ni<ntest; ni++){
+    if (Nset(ni).n_elem == 0){
+
+      // first pass: get closest training parent
+      int left=0;
+      int right=ntrain-1;
+      int mid=(int)round((left+right)/2);
+      while(right-left>1){
+        if (wtrain(indsort0(mid),0)<=wtest(ni,0)){
+          left = mid;
+          mid=(int)round((left+right)/2);
+        } else {
+          right= mid;
+          mid=(int)round((left+right)/2);
+        }
+      }
+      int left0 = left;
+      int right0 = right;
+      arma::rowvec rdiff = wtest.row(ni) - wtrain.row(indsort0(left));
+      double rdist = sqrt(arma::accu(rdiff % rdiff));
+      int s0 = left;
+      double dist0 = rdist;
+      rdiff = wtest.row(ni) - wtrain.row(indsort0(right));
+      rdist = sqrt(arma::accu(rdiff % rdiff));
+      if (rdist < dist0){
+        s0 = right;
+        dist0 = rdist;
+      }
+      double adist_l = wtest(ni,0) - wtrain(indsort0(left),0);
+      double adist_r = wtrain(indsort0(right),0) - wtest(ni,0);
+      double adist = std::min(adist_l, adist_r);
+      while (adist < dist0){
+        if (adist_l < adist_r){
+          if (left==0){
+            adist_l = dist0*2;
+          } else{
+            left--;
+            arma::rowvec rdiff = wtest.row(ni) - wtrain.row(indsort0(left));
+            double rdist = sqrt(arma::accu(rdiff % rdiff));
+            if (rdist < dist0){
+              s0 = left;
+              dist0 = rdist;
+            }
+            adist_l = wtest(ni,0) - wtrain(indsort0(left),0);
+          }
+        } else{
+          if (right==ntrain-1){
+            adist_r = dist0*2;
+          } else{
+            right++;
+            arma::rowvec rdiff = wtest.row(ni) - wtrain.row(indsort0(right));
+            double rdist = sqrt(arma::accu(rdiff % rdiff));
+            if (rdist < dist0){
+              s0 = right;
+              dist0 = rdist;
+            }
+            adist_r = wtrain(indsort0(right),0) - wtest(ni,0);            
+          }
+        }
+        adist = std::min(adist_l, adist_r);
+      }
+
+      // second pass: get closest training location suject to angle constraints 
+      double cos_thre = sqrt(2)/2;
+      arma::rowvec nv = (wtrain.row(indsort0(s0)) - wtest.row(ni)) / dist0;
+      left = left0;
+      right = right0;
+      double dist1 = std::numeric_limits<double>::infinity();
+      int s1 = -1;
+      rdiff = wtrain.row(indsort0(left)) - wtest.row(ni);
+      rdist = sqrt(arma::accu(rdiff % rdiff));
+      if (arma::accu(rdiff % nv) < rdist*cos_thre and rdist < dist1){
+        s1 = left;
+        dist1 = rdist;       
+      }
+      rdiff = wtrain.row(indsort0(right)) - wtest.row(ni);
+      rdist = sqrt(arma::accu(rdiff % rdiff));
+      if (arma::accu(rdiff % nv) < rdist*cos_thre and rdist < dist1){
+        s1 = right;
+        dist1 = rdist;       
+      }
+      adist_l = wtest(ni,0) - wtrain(indsort0(left),0);
+      adist_r = wtrain(indsort0(right),0) - wtest(ni,0);
+      adist = std::min(adist_l, adist_r);
+      while (adist < dist1){
+        if (adist_l < adist_r){
+          if (left==0){
+            adist_l = dist1*2;
+          } else{
+            left--;
+            arma::rowvec rdiff = wtrain.row(indsort0(left)) - wtest.row(ni);
+            rdist = sqrt(arma::accu(rdiff % rdiff));
+            if (arma::accu(rdiff % nv) < rdist*cos_thre and rdist < dist1){
+              s1 = left;
+              dist1 = rdist;
+            }
+            adist_l = wtest(ni,0) - wtrain(indsort0(left),0);
+          }
+        } else{
+          if (right==ntrain-1){
+            adist_r = dist1*2;
+          } else{
+            right++;
+            arma::rowvec rdiff = wtrain.row(indsort0(right)) - wtest.row(ni);
+            rdist = sqrt(arma::accu(rdiff % rdiff));
+            if (arma::accu(rdiff % nv) < rdist*cos_thre and rdist < dist1){
+              s1 = right;
+              dist1 = rdist;  
+            }
+            adist_r = wtrain(indsort0(right),0) - wtest(ni,0);            
+          }
+        }
+        adist = std::min(adist_l, adist_r);
+      }
+
+      // add elements to parent set
+      if (s1 == -1){
+        Nset(ni) = arma::uvec(1,arma::fill::value(indsort0(s0)));
+      } else{
+        std::vector<int> addset = {indsort0(s0), indsort0(s1)};
+        Nset(ni) = arma::conv_to<arma::uvec>::from(addset);
+      }
+    }
+  }
+  
   return Nset;
 }
 
@@ -147,7 +276,7 @@ arma::field<arma::uvec> aptdagbuild_testset(const arma::mat& wtrain,
                                             arma::uvec& layers, int M){
   arma::field<arma::uvec> Rset = neighbor_search_testset(wtrain, wtest, rho);
   int ntrain = wtrain.n_rows;
-  arma::field<arma::uvec> dag = dagbuild_from_nn_testset(Rset, ntrain, layers, M);
+  arma::field<arma::uvec> dag = dagbuild_from_nn_testset(Rset, ntrain, layers, M, wtrain, wtest);
   return dag;
 }
 
@@ -157,7 +286,7 @@ Rcpp::List Raptdagbuild_testset(const arma::mat& wtrain, const arma::mat& wtest,
   arma::field<arma::uvec> Rset = neighbor_search_testset(wtrain, wtest, rho);
   int ntrain = wtrain.n_rows;
   arma::uvec layers;
-  arma::field<arma::uvec> dag = dagbuild_from_nn_testset(Rset, ntrain, layers, M);
+  arma::field<arma::uvec> dag = dagbuild_from_nn_testset(Rset, ntrain, layers, M, wtrain, wtest);
   return Rcpp::List::create(
     Rcpp::Named("dag") = dag,
     Rcpp::Named("layers") = layers,

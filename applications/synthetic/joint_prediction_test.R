@@ -91,15 +91,50 @@ fun_exp <- function(v){
   return(mean(exp(v)))
 }
 
+fun_gamma <- function(v){
+  return(mean(gamma(v)))
+}
+
+coverage <- function(zhat_mcmc, ztrue, alpha=0.9){
+  ## zhat_mcmc is a n_mcmc\times ntest matrix, ztrue is a ntest length vector
+  s = 0
+  n_mcmc = dim(zhat_mcmc)[1]
+  indices = c(round(n_mcmc*(1-alpha)/2), n_mcmc-round(n_mcmc*(1-alpha)/2))
+  ntest = dim(zhat_mcmc)[2]
+  for (i in 1:ntest){
+    chain_sort = sort(zhat_mcmc[,i])
+    if (ztrue[i]>=chain_sort[indices[1]] & ztrue[i]<=chain_sort[indices[2]]){
+      s = s + 1
+    }
+  }
+  return(s/n_mcmc)
+}
+
+CI <- function(lst,alpha=0.9){
+  out = c(mean(lst),0,0)
+  n = length(lst)
+  lst_sort = sort(lst)
+  l = n*(1-alpha)/2
+  if (floor(l)!=l){
+    l1 = floor(l)
+    u1 = n-l1-1
+    out[2:3] = c(mean(lst_sort[l1:(l1+1)]), mean(lst_sort[u1:(u1+1)]))
+  } else{
+    u = n-l
+    out[2:3] = c(lst_sort[l], lst_sort[u])
+  }
+  return(out)
+}
+
 ##-----------------------------------------------------------------------
 ## Specify global parameter
-# model='latent'
-model='response'
-nexp = 20  ## total number of iterations
-fun_lst = c(max, mean, sd, fun_relu, median, fun_max_min)
-fun_label = c('max', 'mean', 'sd', 'relu', 'median', 'fun_max_min')
+model='latent'
+# model='response'
+nexp = 50  ## total number of iterations
+fun_lst = c(max, mean, sd, fun_relu, median, fun_max_min, fun_exp, fun_gamma)
+fun_label = c('Max', 'Mean', 'Standard Deviation', 'Mean of Relu', 'Median', 'Max_min', 'exp', 'gamma')
 if (model=='latent'){
-  nugget = 0.1
+  nugget = 0.01
 } else{
   nugget = 0
 }
@@ -110,27 +145,30 @@ theta[1] = - log(cov_thre/theta[2]) / x_thre^theta[3]
 plates = matrix(c(0.15,0.25,0.45,0.55,0.75,0.85),nrow=2)
 n_region = ncol(plates)^2
 W2_fun_tensor = array(rnorm(n_region*3*nexp*length(fun_lst)),dim=c(n_region,3,nexp,length(fun_lst)))
+n_reports = 6 ## report theta[1], theta[2], theta[3], nugget, MSE, coverage
+reports_tensor = array(rnorm(3*nexp*n_reports),dim=c(3,nexp,n_reports))
 time_ls = matrix(0,nrow=nexp,ncol=3)
-aptdag_theta_mean_lst = matrix(0,nrow=nexp,ncol=3)
-nngp_theta_mean_lst = matrix(0,nrow=nexp,ncol=3)
-nugget_mean_lst = matrix(0,nrow=nexp,ncol=2)
 
-m = 6
+# m = 20
+# rho = 0.081
+m = 8
 rho = 0.055
-rho_test = rho
+# m = 5
+# rho = 0.048
 
+rho_test = rho
 for (iexp in 1:nexp){
   region_valid = FALSE
   while (!region_valid){
     region_valid = TRUE
     ##---------------------------------------------------------------------
     ## Generate training from grids and test data uniformly
-    nl = 30
-    coords_train = as.matrix(expand.grid(xout<-seq(0,1,length.out=nl),xout))
-    coords_test = matrix(runif(nl^2*2),nrow=(nl^2),ncol=2)
-    ntrain = nrow(coords_train)
-    ntest = nrow(coords_test)
+    nl = 40
+    ntrain = nl^2
+    ntest = 1000
     nall = ntrain + ntest
+    coords_train = as.matrix(expand.grid(xout<-seq(0,1,length.out=nl),xout))
+    coords_test = matrix(runif(ntest*2),nrow=(ntest),ncol=2)
     coords_all = rbind(coords_train, coords_test)
     
     #-------------------------------------------------------------------------
@@ -175,39 +213,32 @@ for (iexp in 1:nexp){
   
   ##------------------------------------------------------------------ aptdag model 
   mcmc <- 2500
-  # unif_bounds <- matrix(nrow=3, ncol=2)
-  # unif_bounds[1,] <- c(1, 300) # phi
-  # unif_bounds[2,] <- c(.1, 10) # sigmasq
-  # unif_bounds[3,] <- c(0.75, 2-.001) # nu
-  # nugg_bounds <- c(0.5*1e-5, 1.5*1e-5) # nugget for response model
-  # theta_start <- c(50, 1, 1.5)
-  
-  theta_start <- c(30, 1, 1)
+  theta_start <- c(25, 1, 1)
   theta_unif_bounds <- matrix(nrow=3, ncol=2)
   theta_unif_bounds[1,] <- c(5, 100) # phi
   theta_unif_bounds[2,] <- c(.2, 10) # sigmasq
-  theta_unif_bounds[3,] <- c(0.9, 2-.001) # nu
-  # theta_unif_bounds[3,] <- c(0.999,1.001)
+  # theta_unif_bounds[3,] <- c(0.9, 2-.001) # nu
+  theta_unif_bounds[3,] <- c(0.9999,1.0001)
   if (model=='latent'){
     nugget_start <- nugget
   } else{
     nugget_start <- 1e-5
     nugg_bounds <- c(1e-7,1e-4)
   }
-  nugget_prior <- c(0.001, 0.001)
+  nugget_prior <- c(2, 0.005)
   
   
   if (model=='latent'){
-    t0 = Sys.time()
+    t0 = as.numeric(Sys.time())
     altdag_model <- latent.model(y_train, coords_train, rho=rho, 
                                  theta_start=theta_start,
                                  theta_prior=theta_unif_bounds,
                                  nugg_start=nugget_start,
                                  nugg_prior=nugget_prior,
                                  mcmc=mcmc, n_threads=16, printn=1)
-    t1 = Sys.time()      
+    t1 = as.numeric(Sys.time())      
   } else{
-    t0 = Sys.time()
+    t0 = as.numeric(Sys.time())
     altdag_model <- response.model(y_train, coords_train, rho=rho, 
                                    theta_start=theta_start,
                                    theta_prior=theta_unif_bounds,
@@ -215,11 +246,11 @@ for (iexp in 1:nexp){
                                    nugg_prior=nugget_prior,
                                    nugg_bounds=nugg_bounds,
                                    mcmc=mcmc, n_threads=16, printn=1)
-    t1 = Sys.time()  
+    t1 = as.numeric(Sys.time())  
   }
   
   altdag_predict <- predict(altdag_model, coords_test, rho=rho_test, mcmc_keep=mc_true, n_threads=16)
-  t2 = Sys.time()
+  t2 = as.numeric(Sys.time())
   
   if (model=='latent'){
     zalt_mc <- t(altdag_predict$wout)    
@@ -228,25 +259,19 @@ for (iexp in 1:nexp){
   }
   t2-t0
   
-  # m_alt = mean(sapply(altdag_model$dag, length))
-  # m_alt_test = mean(sapply(altdag_predict$predict_dag, length))
-  # c(m_alt,m_alt_test)
-  
   ##-------------------------------------------------------------------------
-  ## nngp model
   # vecchia-maxmin estimation MCMC
-  
   if (model=='latent'){
-    t3 = Sys.time()
+    t3 = as.numeric(Sys.time())
     maxmin_model <- latent.model.vecchia(y_train, coords_train, m=m,
                                          theta_start=theta_start,
                                          theta_prior=theta_unif_bounds,
                                          nugg_start=nugget_start,
                                          nugg_prior=nugget_prior,
                                          mcmc=mcmc, n_threads=16, printn=1)
-    t4 = Sys.time()    
+    t4 = as.numeric(Sys.time())    
   } else{
-    t3 = Sys.time()
+    t3 = as.numeric(Sys.time())
     maxmin_model <- response.model.vecchia(y_train, coords_train, m=m, 
                                            theta_start=theta_start,
                                            theta_prior=theta_unif_bounds,
@@ -254,14 +279,14 @@ for (iexp in 1:nexp){
                                            nugg_prior=nugget_prior,
                                            nugg_bounds=nugg_bounds,
                                            mcmc=mcmc, n_threads=16, printn=1)
-    t4 = Sys.time()      
+    t4 = as.numeric(Sys.time())      
   }
   
   # NNGP prediction
   nngp_predict <- predict(maxmin_model, coords_test, mcmc_keep=mc_true, n_threads=16, independent=FALSE)
-  t5 = Sys.time()
+  t5 = as.numeric(Sys.time())
   inngp_predict <- predict(maxmin_model, coords_test, mcmc_keep=mc_true, n_threads=16, independent=TRUE)
-  t6 = Sys.time()
+  t6 = as.numeric(Sys.time())
   
   if (model=='latent'){
     znngp_mc <- t(nngp_predict$wout)
@@ -270,21 +295,28 @@ for (iexp in 1:nexp){
     znngp_mc <- t(nngp_predict$yout)
     zinngp_mc <- t(inngp_predict$yout)    
   }
-  
+  reports_tensor[1,iexp,1:3] = apply(altdag_model$theta[,-(1:(mcmc-mc_true))],1,mean)
+  reports_tensor[2,iexp,1:3] = apply(maxmin_model$theta[,-(1:(mcmc-mc_true))],1,mean)
+  reports_tensor[3,iexp,1:3] = reports_tensor[2,iexp,1:3]
+  reports_tensor[,iexp,4] = c(mean(altdag_model$nugg[-(1:(mcmc-mc_true))]), 
+                              mean(maxmin_model$nugg[-(1:(mcmc-mc_true))]), 
+                              mean(maxmin_model$nugg[-(1:(mcmc-mc_true))]))
+  reports_tensor[,iexp,5] = c(mean((apply(zalt_mc,2,mean)-ztrue_mc[1,])^2), 
+                              mean((apply(znngp_mc,2,mean)-ztrue_mc[1,])^2), 
+                              mean((apply(zinngp_mc,2,mean)-ztrue_mc[1,])^2))
+  reports_tensor[,iexp,6] = c(coverage(zalt_mc, ztrue_mc[1,]), 
+                              coverage(znngp_mc, ztrue_mc[1,]), coverage(zinngp_mc, ztrue_mc[1,]))
+
   ##------------------------------------------------------------------------------
   ## print time
-  # print(c(m_alt, m_alt_test))
-  aptdag_theta_mean_lst[iexp,] = apply(altdag_model$theta[,-(1:(mcmc-mc_true))],1,mean)
-  nngp_theta_mean_lst[iexp,] = apply(maxmin_model$theta[,-(1:(mcmc-mc_true))],1,mean)
-  nugget_mean_lst[iexp,] = c(mean(altdag_model$nugg[-(1:(mcmc-mc_true))]),mean(maxmin_model$nugg[-(1:(mcmc-mc_true))]))
   print(paste('Alt DAG training time: ', t1-t0, ', testing time: ', t2-t1, ', total time: ', t2-t0, sep=''))
   print(paste('NNGP training time: ', t4-t3, ', testing time: ', t5-t4, ', total time: ', t5-t3, sep=''))
   print(paste('i-NNGP total time: ', t4-t3, ', testing time: ', t6-t5, ', total time: ', t6-t5+t4-t3, sep=''))
   print(paste('Apt DAG theta mean: '))
-  print(aptdag_theta_mean_lst[iexp,])
+  print(reports_tensor[1,iexp,1:3])
   print(paste('Vecchia maxmin theta mean: '))
-  print(nngp_theta_mean_lst[iexp,])
-  print(paste('Apt nugget mean: ', nugget_mean_lst[iexp,1], ' vecchia nugget mean: ', nugget_mean_lst[iexp,2], sep=''))
+  print(reports_tensor[2,iexp,1:3])
+  print(paste('Apt nugget mean: ', reports_tensor[1,iexp,4], ' vecchia nugget mean: ', reports_tensor[2,iexp,4], sep=''))
   time_ls[iexp,] = c(t2-t0,t5-t3,t6-t5+t4-t3)
   
   ##----------------------------------------------------------------------------
@@ -292,6 +324,7 @@ for (iexp in 1:nexp){
   dat_fun <- data.frame(matrix(0,nrow=mc_true*n_region*4,ncol=3))
   colnames(dat_fun) <- c('region', 'model', 'maximum')
   W2_fun <- matrix(0,nrow=n_region,ncol=3)
+  
   loc = 0
   for (i in 1:ncol(plates)){
     for (j in 1:ncol(plates)){
@@ -304,41 +337,19 @@ for (iexp in 1:nexp){
         samples_inngp = apply(zinngp_mc[,region_lst[[ind]]],1,fun)
         W2_fun_tensor[ind,,iexp,k] = c(discrete_W_1d(samples_true, samples_alt), 
                                        discrete_W_1d(samples_true, samples_nngp), 
-                                       discrete_W_1d(samples_true, samples_inngp))        
-        # dat_fun[((loc+1):(loc+4*mc_true)),1] = ind
-        # dat_fun[((loc+1):(loc+mc_true)),2] = 'true'
-        # dat_fun[((loc+1+mc_true):(loc+2*mc_true)),2] = 'altdag'
-        # dat_fun[((loc+1+2*mc_true):(loc+3*mc_true)),2] = 'nngp'
-        # dat_fun[((loc+1+3*mc_true):(loc+4*mc_true)),2] = 'inngp'
-        # dat_fun[((loc+1):(loc+mc_true)),3] = apply(ztrue_mc[,region_lst[[ind]]],1,fun)
-        # dat_fun[((loc+1+mc_true):(loc+2*mc_true)),3] = apply(zalt_mc[,region_lst[[ind]]],1,fun)
-        # dat_fun[((loc+1+2*mc_true):(loc+3*mc_true)),3] = apply(znngp_mc[,region_lst[[ind]]],1,fun)
-        # dat_fun[((loc+1+3*mc_true):(loc+4*mc_true)),3] = apply(zinngp_mc[,region_lst[[ind]]],1,fun)
+                                       discrete_W_1d(samples_true, samples_inngp))      
       }
-      # loc = loc + mc_true*4
     }
   }
-  
-  ##----------------------------------------------------------------------------
-  # p_region_max_lst = vector('list',n_region)
-  # for (i in 1:n_region){
-  #   p_region_max_lst[[i]] <- ggplot(dat_fun[which(dat_fun$region==i),]) +
-  #     geom_boxplot(aes(y=maximum,x=model))
-  # }
-  # grid.arrange(p_region_max_lst[[1]],p_region_max_lst[[2]],p_region_max_lst[[3]],p_region_max_lst[[4]],
-  #              p_region_max_lst[[5]],p_region_max_lst[[6]],p_region_max_lst[[7]],p_region_max_lst[[8]],
-  #              p_region_max_lst[[9]],nrow=3)
-  # 
-  # p_region_max_W2_lst = vector('list',n_region)
-  # for (i in 1:n_region){
-  #   p_region_max_W2_lst[[i]] <- ggplot(data.frame(model=c('altdag','nngp','inngp'),W2_fun=W2_fun[i,])) +
-  #     geom_col(aes(y=W2_fun,x=model))
-  # }
-  # grid.arrange(p_region_max_W2_lst[[1]],p_region_max_W2_lst[[2]],p_region_max_W2_lst[[3]],p_region_max_W2_lst[[4]],
-  #              p_region_max_W2_lst[[5]],p_region_max_W2_lst[[6]],p_region_max_W2_lst[[7]],p_region_max_W2_lst[[8]],
-  #              p_region_max_W2_lst[[9]],nrow=3)
   print(paste(iexp, 'th outer loop finished', sep=''))
 }  
+
+reports_summary = array(0, dim=c(3,n_reports,3))  ## the last dimension represents mean and lower & upper confidence bound
+for (i in 1:3){
+  for (j in 1:n_reports){
+    reports_summary[i,j,]=CI(reports_tensor[i,,j])
+  }
+}
 
 fun_summary = array(0, dim=c(3,2,length(fun_lst)))
 for (l in 1:3){
@@ -349,14 +360,68 @@ for (l in 1:3){
   }
 }
 
+fun_dat <- data.frame(matrix(0,nrow=n_region*3*nexp*length(fun_lst),ncol=3))
+colnames(fun_dat) <- c('W2_value', 'Test_fun', 'Method')
+method_names = c('RadGP','V-Pred','NNGP')
+loc = 0
+for (i in 1:3){
+  gapi = n_region*nexp*length(fun_lst)
+  fun_dat$Method[((i-1)*gapi+1):(i*gapi)] = method_names[i]
+  for (j in 1:length(fun_lst)){
+    gapj = n_region*nexp
+    fun_dat$Test_fun[(loc+1):(loc+gapj)] = fun_label[j]
+    fun_dat$W2_value[(loc+1):(loc+gapj)] = as.vector(W2_fun_tensor[,i,,j])
+    loc = loc + gapj
+  }
+}
 
+print('End of running.')
 print(paste('time:', mean(time_ls[,1]), mean(time_ls[,2]), mean(time_ls[,3])))
-print(paste('theta:',theta[1], theta[2], theta[3], theta[4]))
-print('aptdag overall mean theta:')
-print(apply(aptdag_theta_mean_lst,2,mean))
-print('vecchia overall mean theta')
-print(apply(nngp_theta_mean_lst,2,mean))
-print(paste('Apt nugget mean: ', mean(nugget_mean_lst[,1]), ' vecchia nugget mean: ', mean(nugget_mean_lst[iexp,2]), sep=''))
+print(paste('m:', m, ', rho:', rho, ', nugget:', nugget, sep=''))
+print('aptdag summary')
+print(reports_summary[1,,])
+print('vecchia maxmin summary')
+print(reports_summary[2,,])
+
+
+W2_limit = 0.075
+fun_label_select = fun_label[2:5]
+fun_dat_select = fun_dat[which((fun_dat$W2_value<W2_limit)&(fun_dat$Test_fun %in% fun_label_select)),]
+ggplot(fun_dat_select) +
+  geom_boxplot(aes(y=W2_value,x=Method),fill='lightgoldenrod1') + ggtitle(paste(fun_label[i],sep='')) + 
+  theme_minimal(base_size = 30) + labs(y='W2 distnace',x=NULL,title=NULL) +
+  theme(plot.title = element_text(hjust = 0.5)) + facet_wrap(~Test_fun, nrow=1)
+
+
+# plots_lst = vector('list',length(fun_lst))
+# for (i in 1:length(fun_lst)){
+#   plots_lst[[i]] <- ggplot(fun_dat[which(fun_dat$Test_fun==fun_label[i]),]) +
+#     geom_boxplot(aes(y=W2_value,x=Method)) + ggtitle(paste(fun_label[i],sep='')) + 
+#     theme_minimal(base_size = 18) + labs(y=NULL,x=NULL) +
+#     theme(plot.title = element_text(hjust = 0.5))
+# }
+# plots_lst[[2]] <- ggplot(fun_dat[which(fun_dat$Test_fun==fun_label[1]),]) +
+#   geom_boxplot(aes(y=W2_value,x=Method)) + ggtitle(paste(fun_label[1],sep='')) + 
+#   theme_minimal(base_size = 18) + labs(y='W2 distnace',x=NULL) + 
+#   theme(plot.title = element_text(hjust = 0.5))
+# grid.arrange(plots_lst[[2]], plots_lst[[3]], plots_lst[[4]], plots_lst[[5]], nrow=1)
+# grid.arrange(plots_lst[[1]], plots_lst[[2]], plots_lst[[3]], plots_lst[[4]], 
+#              plots_lst[[5]], plots_lst[[6]], plots_lst[[7]], plots_lst[[8]], nrow=2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 for (k in 1:length(fun_lst)){
   print(paste('fun:', fun_label[[k]]))
   print(fun_summary[,,k])
@@ -370,9 +435,11 @@ for (k in 1:length(fun_lst)){
 
 
 
+##-----------------------------------------------------------------------------
+## compute strength of signal
 
-
-
-
+# rad = 0.05
+# sigcov = theta[2]*exp(-theta[1]*rad^theta[3])
+# sig = 2*theta[2]-2*sigcov
 
 

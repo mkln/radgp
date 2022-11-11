@@ -267,8 +267,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // dagbuild_from_nn_testset
-arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& Rset, int ntrain, arma::uvec& layers, int Mmin);
-RcppExport SEXP _aptdag_dagbuild_from_nn_testset(SEXP RsetSEXP, SEXP ntrainSEXP, SEXP layersSEXP, SEXP MminSEXP) {
+arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& Rset, int ntrain, arma::uvec& layers, int Mmin, const arma::mat& wtrain, const arma::mat& wtest);
+RcppExport SEXP _aptdag_dagbuild_from_nn_testset(SEXP RsetSEXP, SEXP ntrainSEXP, SEXP layersSEXP, SEXP MminSEXP, SEXP wtrainSEXP, SEXP wtestSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -276,7 +276,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ntrain(ntrainSEXP);
     Rcpp::traits::input_parameter< arma::uvec& >::type layers(layersSEXP);
     Rcpp::traits::input_parameter< int >::type Mmin(MminSEXP);
-    rcpp_result_gen = Rcpp::wrap(dagbuild_from_nn_testset(Rset, ntrain, layers, Mmin));
+    Rcpp::traits::input_parameter< const arma::mat& >::type wtrain(wtrainSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type wtest(wtestSEXP);
+    rcpp_result_gen = Rcpp::wrap(dagbuild_from_nn_testset(Rset, ntrain, layers, Mmin, wtrain, wtest));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -379,7 +381,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_aptdag_Raptdagbuild", (DL_FUNC) &_aptdag_Raptdagbuild, 2},
     {"_aptdag_sparse_struct", (DL_FUNC) &_aptdag_sparse_struct, 2},
     {"_aptdag_neighbor_search_testset", (DL_FUNC) &_aptdag_neighbor_search_testset, 3},
-    {"_aptdag_dagbuild_from_nn_testset", (DL_FUNC) &_aptdag_dagbuild_from_nn_testset, 4},
+    {"_aptdag_dagbuild_from_nn_testset", (DL_FUNC) &_aptdag_dagbuild_from_nn_testset, 6},
     {"_aptdag_Raptdagbuild_testset", (DL_FUNC) &_aptdag_Raptdagbuild_testset, 4},
     {"_aptdag_aptdaggp_response_predict", (DL_FUNC) &_aptdag_aptdaggp_response_predict, 7},
     {"_aptdag_vecchiagp_response_predict", (DL_FUNC) &_aptdag_vecchiagp_response_predict, 6},

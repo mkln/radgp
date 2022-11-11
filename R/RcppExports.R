@@ -69,8 +69,8 @@ neighbor_search_testset <- function(wtrain, wtest, rho) {
     .Call(`_aptdag_neighbor_search_testset`, wtrain, wtest, rho)
 }
 
-dagbuild_from_nn_testset <- function(Rset, ntrain, layers, Mmin) {
-    .Call(`_aptdag_dagbuild_from_nn_testset`, Rset, ntrain, layers, Mmin)
+dagbuild_from_nn_testset <- function(Rset, ntrain, layers, Mmin, wtrain, wtest) {
+    .Call(`_aptdag_dagbuild_from_nn_testset`, Rset, ntrain, layers, Mmin, wtrain, wtest)
 }
 
 Raptdagbuild_testset <- function(wtrain, wtest, rho, M) {
