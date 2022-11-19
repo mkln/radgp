@@ -1,7 +1,7 @@
 
 #include <RcppArmadillo.h>
 
-#include "aptdag.h"
+#include "radgp.h"
 #include "rama.h"
 
 using namespace std;

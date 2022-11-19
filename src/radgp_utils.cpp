@@ -1,4 +1,4 @@
-#include "aptdag.h"
+#include "radgp.h"
 
 //[[Rcpp::export]]
 Rcpp::List aptdaggp(const arma::mat& coords,

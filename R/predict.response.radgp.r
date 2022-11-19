@@ -1,4 +1,4 @@
-predict.response.aptdag <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_threads=1){
+predict.response.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_threads=1){
   
   if(is.null(mcmc_keep)){
     mcmc_keep <- ncol(obj$theta)

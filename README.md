@@ -1,14 +1,11 @@
-## AptDAG GP
+## Radial neighbors GP
 
 ```
 install.packages(c("GPvecchia", "Rcpp", "RcppArmadillo", "RcppEigen"))
 
-devtools::install_github("mkln/aptdag")
+devtools::install_github("mkln/radgp")
 ```
 Or download source in zip file, then
 ```
-devtools::install_local("aptdag-main.zip")
+devtools::install_local("radgp-main.zip")
 ```
-
-
-[Example comparing with Vecchia/NNGP using maxmin ordering from GPvecchia R package](https://github.com/mkln/aptdag/blob/main/examples/example.r)

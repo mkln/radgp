@@ -1,11 +1,11 @@
-Package: aptdag
+Package: radgp
 Type: Package
-Title: Markov-chain Monte Carlo estimation of Apt Neighborhood DAG Gaussian Process (response and latent models)
-Version: 0.0.2
-Date: 2022-09-24
+Title: Markov-chain Monte Carlo estimation of Radial Neighbors Gaussian Process (response and latent models)
+Version: 0.0.3
+Date: 2022-11-19
 Author: Michele Peruzzi, Yichen Zhu
 Maintainer: Michele Peruzzi <michele.peruzzi@duke.edu>
-Description: Markov-chain Monte Carlo estimation of Apt Neighborhood DAG Gaussian Process. This package implements response or latent models using AptDAG. Maximum likelihood estimation of response model parameters is also possible.
+Description: Markov-chain Monte Carlo estimation of Radial Neighbors Gaussian Process. This package implements response or latent models using RadGP. Maximum likelihood estimation of response model parameters is also possible.
 License: GPL (>= 3)
 Imports: Rcpp (>= 1.0.8.3), FNN, GPvecchia
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen

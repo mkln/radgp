@@ -42,7 +42,7 @@ latent.model <- function(y, coords, rho, mcmc, n_threads,
   
   result <- c(aptdag_model, list(time=aptdag_time))
   
-  class(result) <- "latent.aptdag"
+  class(result) <- "latent.radgp"
   return(result)
 }
 

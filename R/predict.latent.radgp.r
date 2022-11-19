@@ -1,4 +1,4 @@
-predict.latent.aptdag <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_threads=1){
+predict.latent.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_threads=1){
   
   if(is.null(mcmc_keep)){
     mcmc_keep <- ncol(obj$theta)

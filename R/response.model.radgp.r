@@ -45,7 +45,7 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
   result$nugg <- result$theta[4,]
   result$theta <- result$theta[1:3,]
   
-  class(result) <- "response.aptdag"
+  class(result) <- "response.radgp"
   return(result)
 }
 

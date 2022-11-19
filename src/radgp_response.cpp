@@ -1,6 +1,6 @@
 #include <RcppArmadillo.h>
 
-#include "aptdag.h"
+#include "radgp.h"
 #include "predict.h"
 #include "rama.h"
 
