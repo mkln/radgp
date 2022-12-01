@@ -16,7 +16,7 @@ predict.response.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_t
     param <- rbind(obj$theta, obj$nugg)
   }
   
-  result <- aptdaggp_response_predict(newcoords, obj$y, 
+  result <- radgp_response_predict(newcoords, obj$y, 
                                       obj$coords, rho, 
                                       param, obj$M, n_threads)
   
