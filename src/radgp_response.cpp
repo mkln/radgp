@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void response_mcmc(AptDAG& adag, 
+void response_mcmc(DagGP& adag, 
                    arma::mat& theta_mcmc,
                    arma::vec& logdens_mcmc,
                    int mcmc, 
@@ -109,7 +109,7 @@ void response_mcmc(AptDAG& adag,
 }
 
 //[[Rcpp::export]]
-Rcpp::List aptdaggp_response(const arma::vec& y,
+Rcpp::List radgp_response(const arma::vec& y,
                     const arma::mat& coords,
                     double rho,
                     int mcmc,
@@ -126,7 +126,7 @@ Rcpp::List aptdaggp_response(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AptDAG adag(y, coords, rho, 0, num_threads); // 0 for response
+  DagGP adag(y, coords, rho, 0, num_threads); // 0 for response
   
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
@@ -147,7 +147,7 @@ Rcpp::List aptdaggp_response(const arma::vec& y,
 
 
 //[[Rcpp::export]]
-Rcpp::List aptdaggp_custom(const arma::vec& y,
+Rcpp::List radgp_custom(const arma::vec& y,
                              const arma::mat& coords,
                              const arma::field<arma::uvec>& dag,
                              int mcmc,
@@ -165,7 +165,7 @@ Rcpp::List aptdaggp_custom(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AptDAG adag(y, coords, dag, 0, num_threads); // 0 for response
+  DagGP adag(y, coords, dag, 0, num_threads); // 0 for response
   
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;

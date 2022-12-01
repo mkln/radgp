@@ -20,7 +20,7 @@ predict.latent.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_thr
   }
   theta <- rbind(theta, rep(1e-8, ncol(theta)))
   
-  result <- aptdaggp_latent_predict(newcoords, w, 
+  result <- radgp_latent_predict(newcoords, w, 
                                       obj$coords, rho, 
                                       theta, obj$M, n_threads)
 

@@ -21,8 +21,8 @@ dagbuild_from_nn <- function(Rset, layers, M, w, rho) {
     .Call(`_radgp_dagbuild_from_nn`, Rset, layers, M, w, rho)
 }
 
-Raptdagbuild <- function(w, rho) {
-    .Call(`_radgp_Raptdagbuild`, w, rho)
+radial_neighbors_dag <- function(w, rho) {
+    .Call(`_radgp_radial_neighbors_dag`, w, rho)
 }
 
 sparse_struct <- function(dag, nr) {
@@ -37,20 +37,20 @@ dagbuild_from_nn_testset <- function(Rset, ntrain, layers, Mmin, wtrain, wtest) 
     .Call(`_radgp_dagbuild_from_nn_testset`, Rset, ntrain, layers, Mmin, wtrain, wtest)
 }
 
-Raptdagbuild_testset <- function(wtrain, wtest, rho, M) {
-    .Call(`_radgp_Raptdagbuild_testset`, wtrain, wtest, rho, M)
+radial_neighbors_dag_testset <- function(wtrain, wtest, rho, M) {
+    .Call(`_radgp_radial_neighbors_dag_testset`, wtrain, wtest, rho, M)
 }
 
-aptdaggp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, num_threads) {
-    .Call(`_radgp_aptdaggp_response_predict`, cout, y, coords, rho, theta_mcmc, M, num_threads)
+radgp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, num_threads) {
+    .Call(`_radgp_radgp_response_predict`, cout, y, coords, rho, theta_mcmc, M, num_threads)
 }
 
 vecchiagp_response_predict <- function(cout, y, coords, dag, theta_mcmc, num_threads) {
     .Call(`_radgp_vecchiagp_response_predict`, cout, y, coords, dag, theta_mcmc, num_threads)
 }
 
-aptdaggp_latent_predict <- function(cout, w, coords, rho, theta_mcmc, M, num_threads) {
-    .Call(`_radgp_aptdaggp_latent_predict`, cout, w, coords, rho, theta_mcmc, M, num_threads)
+radgp_latent_predict <- function(cout, w, coords, rho, theta_mcmc, M, num_threads) {
+    .Call(`_radgp_radgp_latent_predict`, cout, w, coords, rho, theta_mcmc, M, num_threads)
 }
 
 vecchiagp_latent_predict <- function(cout, w, coords, dag, theta_mcmc, num_threads) {
@@ -65,24 +65,24 @@ pred_from_dag <- function(coords, dag, theta, urng) {
     .Call(`_radgp_pred_from_dag`, coords, dag, theta, urng)
 }
 
-aptdaggp_latent <- function(y, coords, rho, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
-    .Call(`_radgp_aptdaggp_latent`, y, coords, rho, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
+radgp_latent <- function(y, coords, rho, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
+    .Call(`_radgp_radgp_latent`, y, coords, rho, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
 }
 
-aptdaggp_custom_latent <- function(y, coords, dag, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
-    .Call(`_radgp_aptdaggp_custom_latent`, y, coords, dag, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
+radgp_custom_latent <- function(y, coords, dag, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
+    .Call(`_radgp_radgp_custom_latent`, y, coords, dag, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
 }
 
-aptdaggp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
-    .Call(`_radgp_aptdaggp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
+radgp_response <- function(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
+    .Call(`_radgp_radgp_response`, y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
 }
 
-aptdaggp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
-    .Call(`_radgp_aptdaggp_custom`, y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
+radgp_custom <- function(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints = 10L) {
+    .Call(`_radgp_radgp_custom`, y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints)
 }
 
-aptdaggp <- function(coords, theta, rho) {
-    .Call(`_radgp_aptdaggp`, coords, theta, rho)
+radgp <- function(coords, theta, rho) {
+    .Call(`_radgp_radgp`, coords, theta, rho)
 }
 
 vecchiagp <- function(coords, theta, dag) {

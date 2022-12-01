@@ -1,12 +1,12 @@
 #include "radgp.h"
 
 //[[Rcpp::export]]
-Rcpp::List aptdaggp(const arma::mat& coords,
+Rcpp::List radgp(const arma::mat& coords,
                     const arma::vec& theta,
                     double rho){
   
   arma::vec y = arma::randn(coords.n_rows);
-  AptDAG adag(y, coords, rho);
+  DagGP adag(y, coords, rho);
   
   adag.make_precision_ahci(theta);
   
@@ -28,7 +28,7 @@ Rcpp::List vecchiagp(const arma::mat& coords,
                      const arma::field<arma::uvec>& dag){
   
   arma::vec y = arma::randn(coords.n_rows);
-  AptDAG adag(y, coords, dag);
+  DagGP adag(y, coords, dag);
   adag.make_precision_ahci(theta);
   double ldens = adag.logdens(theta);
   
@@ -53,6 +53,6 @@ double daggp_negdens(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AptDAG adag(y, coords, dag, 0, num_threads);
+  DagGP adag(y, coords, dag, 0, num_threads);
   return adag.logdens(theta);
 }

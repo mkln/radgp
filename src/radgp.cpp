@@ -1,7 +1,7 @@
 #include "radgp.h"
 #include <thread>
 
-AptDAG::AptDAG(
+DagGP::DagGP(
     const arma::vec& y_in,
     const arma::mat& coords_in, 
     double rho_in,
@@ -13,7 +13,7 @@ AptDAG::AptDAG(
   rho = rho_in;
   
   layers = arma::zeros<arma::uvec>(nr);
-  dag = aptdagbuild(coords, rho, layers, M);
+  dag = radialndag(coords, rho, layers, M);
   oneuv = arma::ones<arma::uvec>(1);
   
   model_type = model;
@@ -22,7 +22,7 @@ AptDAG::AptDAG(
   n_threads = nthread;
 }
 
-AptDAG::AptDAG(
+DagGP::DagGP(
   const arma::vec& y_in,
   const arma::mat& coords_in, 
   const arma::field<arma::uvec>& custom_dag,
@@ -41,7 +41,7 @@ AptDAG::AptDAG(
   n_threads = nthread;
 }
 
-double AptDAG::logdens(const arma::vec& theta){
+double DagGP::logdens(const arma::vec& theta){
   arma::vec logdetvec = arma::zeros(nr);
   arma::vec logdensvec = arma::zeros(nr);
   
@@ -84,7 +84,7 @@ double AptDAG::logdens(const arma::vec& theta){
 }
 
 
-void AptDAG::make_precision_ahci(const arma::vec& theta){
+void DagGP::make_precision_ahci(const arma::vec& theta){
   typedef Eigen::Triplet<double> T;
   std::vector<T> tripletList_H, tripletList_A;
   
@@ -130,11 +130,11 @@ void AptDAG::make_precision_ahci(const arma::vec& theta){
 }
 
 
-void AptDAG::make_precision_hci(const arma::vec& theta){
+void DagGP::make_precision_hci(const arma::vec& theta){
   make_precision_hci_core(H, Ci, prec_det, theta);
 }
 
-void AptDAG::make_precision_hci_core(
+void DagGP::make_precision_hci_core(
   Eigen::SparseMatrix<double> & H,
   Eigen::SparseMatrix<double> & Ci,
   double & prec_det,

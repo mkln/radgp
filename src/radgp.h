@@ -1,7 +1,6 @@
-#ifndef APTDAG 
-#define APTDAG
+#ifndef DAGGP 
+#define DAGGP
 
-// uncomment to disable openmp on compilation
 #include "RcppArmadillo.h"
 #include <RcppEigen.h>
 //#include <Eigen/CholmodSupport>
@@ -9,16 +8,16 @@
 #include "covariance.h"
 #include "interrupt.h"
 
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
+// uncomment to disable openmp on compilation
 //#undef _OPENMP
 
 using namespace std;
 
-class AptDAG {
+class DagGP {
 public:
   int nr;
   arma::vec y;
@@ -56,10 +55,10 @@ public:
   bool prec_inited;
   
   //double ldens;
-  AptDAG(const arma::vec& y,
+  DagGP(const arma::vec& y,
     const arma::mat& coords, double rho, int model=0,
     int nthread=0);
-  AptDAG(const arma::vec& y,
+  DagGP(const arma::vec& y,
          const arma::mat& coords, 
          const arma::field<arma::uvec>& custom_dag,
          int model=0,

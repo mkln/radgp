@@ -32,15 +32,15 @@ latent.model <- function(y, coords, rho, mcmc, n_threads,
   unif_bounds <- rbind(unif_bounds, theta_start[4] + c(-1e-9, +1e-9))
   
   metrop_sd <- 0.15
-  aptdag_time <- system.time({
-    aptdag_model <- aptdaggp_latent(y, coords_train, rho=rho, mcmc, n_threads,
+  radgp_time <- system.time({
+    radgp_model <- radgp_latent(y, coords_train, rho=rho, mcmc, n_threads,
                                     theta_start, nugg_start, 
                                     metrop_sd, unif_bounds, 
                                     nugg_prior, printn) })
   
-  aptdag_model$theta <- aptdag_model$theta[1:3,]
+  radgp_model$theta <- radgp_model$theta[1:3,]
   
-  result <- c(aptdag_model, list(time=aptdag_time))
+  result <- c(radgp_model, list(time=radgp_time))
   
   class(result) <- "latent.radgp"
   return(result)

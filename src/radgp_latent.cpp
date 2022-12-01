@@ -22,7 +22,7 @@ inline arma::mat matrixxd_to_armamat(Eigen::MatrixXd eigen_A){
 }
 
 
-void latent_mcmc(AptDAG& adag, 
+void latent_mcmc(DagGP& adag, 
                    arma::mat& theta_mcmc,
                    arma::mat& w_mcmc,
                    arma::vec& tausq_mcmc,
@@ -224,7 +224,7 @@ void latent_mcmc(AptDAG& adag,
 }
 
 //[[Rcpp::export]]
-Rcpp::List aptdaggp_latent(const arma::vec& y,
+Rcpp::List radgp_latent(const arma::vec& y,
                     const arma::mat& coords,
                     double rho,
                     int mcmc,
@@ -242,7 +242,7 @@ Rcpp::List aptdaggp_latent(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AptDAG adag(y, coords, rho, 1, num_threads); // 1 for latent
+  DagGP adag(y, coords, rho, 1, num_threads); // 1 for latent
   
   arma::mat theta_mcmc;
   arma::mat w_mcmc;
@@ -269,7 +269,7 @@ Rcpp::List aptdaggp_latent(const arma::vec& y,
 
 
 //[[Rcpp::export]]
-Rcpp::List aptdaggp_custom_latent(const arma::vec& y,
+Rcpp::List radgp_custom_latent(const arma::vec& y,
                              const arma::mat& coords,
                              const arma::field<arma::uvec>& dag,
                              int mcmc,
@@ -288,7 +288,7 @@ Rcpp::List aptdaggp_custom_latent(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  AptDAG adag(y, coords, dag, 1, num_threads);
+  DagGP adag(y, coords, dag, 1, num_threads);
   
   arma::mat theta_mcmc;
   arma::mat w_mcmc;

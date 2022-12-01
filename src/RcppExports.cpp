@@ -79,15 +79,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// Raptdagbuild
-Rcpp::List Raptdagbuild(const arma::mat& w, double rho);
-RcppExport SEXP _radgp_Raptdagbuild(SEXP wSEXP, SEXP rhoSEXP) {
+// radial_neighbors_dag
+Rcpp::List radial_neighbors_dag(const arma::mat& w, double rho);
+RcppExport SEXP _radgp_radial_neighbors_dag(SEXP wSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type w(wSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    rcpp_result_gen = Rcpp::wrap(Raptdagbuild(w, rho));
+    rcpp_result_gen = Rcpp::wrap(radial_neighbors_dag(w, rho));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -132,9 +132,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// Raptdagbuild_testset
-Rcpp::List Raptdagbuild_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M);
-RcppExport SEXP _radgp_Raptdagbuild_testset(SEXP wtrainSEXP, SEXP wtestSEXP, SEXP rhoSEXP, SEXP MSEXP) {
+// radial_neighbors_dag_testset
+Rcpp::List radial_neighbors_dag_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M);
+RcppExport SEXP _radgp_radial_neighbors_dag_testset(SEXP wtrainSEXP, SEXP wtestSEXP, SEXP rhoSEXP, SEXP MSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -142,13 +142,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type wtest(wtestSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
-    rcpp_result_gen = Rcpp::wrap(Raptdagbuild_testset(wtrain, wtest, rho, M));
+    rcpp_result_gen = Rcpp::wrap(radial_neighbors_dag_testset(wtrain, wtest, rho, M));
     return rcpp_result_gen;
 END_RCPP
 }
-// aptdaggp_response_predict
-Rcpp::List aptdaggp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int num_threads);
-RcppExport SEXP _radgp_aptdaggp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP num_threadsSEXP) {
+// radgp_response_predict
+Rcpp::List radgp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int num_threads);
+RcppExport SEXP _radgp_radgp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -159,7 +159,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_mcmc(theta_mcmcSEXP);
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(aptdaggp_response_predict(cout, y, coords, rho, theta_mcmc, M, num_threads));
+    rcpp_result_gen = Rcpp::wrap(radgp_response_predict(cout, y, coords, rho, theta_mcmc, M, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -179,9 +179,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// aptdaggp_latent_predict
-Rcpp::List aptdaggp_latent_predict(const arma::mat& cout, const arma::mat& w, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int num_threads);
-RcppExport SEXP _radgp_aptdaggp_latent_predict(SEXP coutSEXP, SEXP wSEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP num_threadsSEXP) {
+// radgp_latent_predict
+Rcpp::List radgp_latent_predict(const arma::mat& cout, const arma::mat& w, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int num_threads);
+RcppExport SEXP _radgp_radgp_latent_predict(SEXP coutSEXP, SEXP wSEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -192,7 +192,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_mcmc(theta_mcmcSEXP);
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(aptdaggp_latent_predict(cout, w, coords, rho, theta_mcmc, M, num_threads));
+    rcpp_result_gen = Rcpp::wrap(radgp_latent_predict(cout, w, coords, rho, theta_mcmc, M, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -239,9 +239,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// aptdaggp_latent
-Rcpp::List aptdaggp_latent(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double tausq_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
-RcppExport SEXP _radgp_aptdaggp_latent(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP tausq_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
+// radgp_latent
+Rcpp::List radgp_latent(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double tausq_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
+RcppExport SEXP _radgp_radgp_latent(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP tausq_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -256,13 +256,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_unif_bounds(theta_unif_boundsSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type tausq_prior(tausq_priorSEXP);
     Rcpp::traits::input_parameter< int >::type num_prints(num_printsSEXP);
-    rcpp_result_gen = Rcpp::wrap(aptdaggp_latent(y, coords, rho, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
+    rcpp_result_gen = Rcpp::wrap(radgp_latent(y, coords, rho, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
     return rcpp_result_gen;
 END_RCPP
 }
-// aptdaggp_custom_latent
-Rcpp::List aptdaggp_custom_latent(const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, int mcmc, int num_threads, const arma::vec& theta_init, double tausq_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
-RcppExport SEXP _radgp_aptdaggp_custom_latent(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP tausq_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
+// radgp_custom_latent
+Rcpp::List radgp_custom_latent(const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, int mcmc, int num_threads, const arma::vec& theta_init, double tausq_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
+RcppExport SEXP _radgp_radgp_custom_latent(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP tausq_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -277,13 +277,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_unif_bounds(theta_unif_boundsSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type tausq_prior(tausq_priorSEXP);
     Rcpp::traits::input_parameter< int >::type num_prints(num_printsSEXP);
-    rcpp_result_gen = Rcpp::wrap(aptdaggp_custom_latent(y, coords, dag, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
+    rcpp_result_gen = Rcpp::wrap(radgp_custom_latent(y, coords, dag, mcmc, num_threads, theta_init, tausq_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
     return rcpp_result_gen;
 END_RCPP
 }
-// aptdaggp_response
-Rcpp::List aptdaggp_response(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
-RcppExport SEXP _radgp_aptdaggp_response(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
+// radgp_response
+Rcpp::List radgp_response(const arma::vec& y, const arma::mat& coords, double rho, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
+RcppExport SEXP _radgp_radgp_response(SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -297,13 +297,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_unif_bounds(theta_unif_boundsSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type tausq_prior(tausq_priorSEXP);
     Rcpp::traits::input_parameter< int >::type num_prints(num_printsSEXP);
-    rcpp_result_gen = Rcpp::wrap(aptdaggp_response(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
+    rcpp_result_gen = Rcpp::wrap(radgp_response(y, coords, rho, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
     return rcpp_result_gen;
 END_RCPP
 }
-// aptdaggp_custom
-Rcpp::List aptdaggp_custom(const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
-RcppExport SEXP _radgp_aptdaggp_custom(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
+// radgp_custom
+Rcpp::List radgp_custom(const arma::vec& y, const arma::mat& coords, const arma::field<arma::uvec>& dag, int mcmc, int num_threads, const arma::vec& theta_init, double metrop_sd, const arma::mat& theta_unif_bounds, const arma::vec& tausq_prior, int num_prints);
+RcppExport SEXP _radgp_radgp_custom(SEXP ySEXP, SEXP coordsSEXP, SEXP dagSEXP, SEXP mcmcSEXP, SEXP num_threadsSEXP, SEXP theta_initSEXP, SEXP metrop_sdSEXP, SEXP theta_unif_boundsSEXP, SEXP tausq_priorSEXP, SEXP num_printsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -317,20 +317,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_unif_bounds(theta_unif_boundsSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type tausq_prior(tausq_priorSEXP);
     Rcpp::traits::input_parameter< int >::type num_prints(num_printsSEXP);
-    rcpp_result_gen = Rcpp::wrap(aptdaggp_custom(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
+    rcpp_result_gen = Rcpp::wrap(radgp_custom(y, coords, dag, mcmc, num_threads, theta_init, metrop_sd, theta_unif_bounds, tausq_prior, num_prints));
     return rcpp_result_gen;
 END_RCPP
 }
-// aptdaggp
-Rcpp::List aptdaggp(const arma::mat& coords, const arma::vec& theta, double rho);
-RcppExport SEXP _radgp_aptdaggp(SEXP coordsSEXP, SEXP thetaSEXP, SEXP rhoSEXP) {
+// radgp
+Rcpp::List radgp(const arma::mat& coords, const arma::vec& theta, double rho);
+RcppExport SEXP _radgp_radgp(SEXP coordsSEXP, SEXP thetaSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type coords(coordsSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    rcpp_result_gen = Rcpp::wrap(aptdaggp(coords, theta, rho));
+    rcpp_result_gen = Rcpp::wrap(radgp(coords, theta, rho));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -369,22 +369,22 @@ static const R_CallMethodDef CallEntries[] = {
     {"_radgp_make_candidates", (DL_FUNC) &_radgp_make_candidates, 4},
     {"_radgp_neighbor_search", (DL_FUNC) &_radgp_neighbor_search, 2},
     {"_radgp_dagbuild_from_nn", (DL_FUNC) &_radgp_dagbuild_from_nn, 5},
-    {"_radgp_Raptdagbuild", (DL_FUNC) &_radgp_Raptdagbuild, 2},
+    {"_radgp_radial_neighbors_dag", (DL_FUNC) &_radgp_radial_neighbors_dag, 2},
     {"_radgp_sparse_struct", (DL_FUNC) &_radgp_sparse_struct, 2},
     {"_radgp_neighbor_search_testset", (DL_FUNC) &_radgp_neighbor_search_testset, 3},
     {"_radgp_dagbuild_from_nn_testset", (DL_FUNC) &_radgp_dagbuild_from_nn_testset, 6},
-    {"_radgp_Raptdagbuild_testset", (DL_FUNC) &_radgp_Raptdagbuild_testset, 4},
-    {"_radgp_aptdaggp_response_predict", (DL_FUNC) &_radgp_aptdaggp_response_predict, 7},
+    {"_radgp_radial_neighbors_dag_testset", (DL_FUNC) &_radgp_radial_neighbors_dag_testset, 4},
+    {"_radgp_radgp_response_predict", (DL_FUNC) &_radgp_radgp_response_predict, 7},
     {"_radgp_vecchiagp_response_predict", (DL_FUNC) &_radgp_vecchiagp_response_predict, 6},
-    {"_radgp_aptdaggp_latent_predict", (DL_FUNC) &_radgp_aptdaggp_latent_predict, 7},
+    {"_radgp_radgp_latent_predict", (DL_FUNC) &_radgp_radgp_latent_predict, 7},
     {"_radgp_vecchiagp_latent_predict", (DL_FUNC) &_radgp_vecchiagp_latent_predict, 6},
     {"_radgp_hmat_from_dag", (DL_FUNC) &_radgp_hmat_from_dag, 3},
     {"_radgp_pred_from_dag", (DL_FUNC) &_radgp_pred_from_dag, 4},
-    {"_radgp_aptdaggp_latent", (DL_FUNC) &_radgp_aptdaggp_latent, 11},
-    {"_radgp_aptdaggp_custom_latent", (DL_FUNC) &_radgp_aptdaggp_custom_latent, 11},
-    {"_radgp_aptdaggp_response", (DL_FUNC) &_radgp_aptdaggp_response, 10},
-    {"_radgp_aptdaggp_custom", (DL_FUNC) &_radgp_aptdaggp_custom, 10},
-    {"_radgp_aptdaggp", (DL_FUNC) &_radgp_aptdaggp, 3},
+    {"_radgp_radgp_latent", (DL_FUNC) &_radgp_radgp_latent, 11},
+    {"_radgp_radgp_custom_latent", (DL_FUNC) &_radgp_radgp_custom_latent, 11},
+    {"_radgp_radgp_response", (DL_FUNC) &_radgp_radgp_response, 10},
+    {"_radgp_radgp_custom", (DL_FUNC) &_radgp_radgp_custom, 10},
+    {"_radgp_radgp", (DL_FUNC) &_radgp_radgp, 3},
     {"_radgp_vecchiagp", (DL_FUNC) &_radgp_vecchiagp, 3},
     {"_radgp_daggp_negdens", (DL_FUNC) &_radgp_daggp_negdens, 5},
     {NULL, NULL, 0}

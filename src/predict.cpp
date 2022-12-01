@@ -270,7 +270,7 @@ arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& 
   return Nset;
 }
 
-arma::field<arma::uvec> aptdagbuild_testset(const arma::mat& wtrain,
+arma::field<arma::uvec> radgpbuild_testset(const arma::mat& wtrain,
                                             const arma::mat& wtest, 
                                             double rho,
                                             arma::uvec& layers, int M){
@@ -282,7 +282,7 @@ arma::field<arma::uvec> aptdagbuild_testset(const arma::mat& wtrain,
 
 
 //[[Rcpp::export]]
-Rcpp::List Raptdagbuild_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M){
+Rcpp::List radial_neighbors_dag_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M){
   arma::field<arma::uvec> Rset = neighbor_search_testset(wtrain, wtest, rho);
   int ntrain = wtrain.n_rows;
   arma::uvec layers;
@@ -295,7 +295,7 @@ Rcpp::List Raptdagbuild_testset(const arma::mat& wtrain, const arma::mat& wtest,
 }
 
 //[[Rcpp::export]]
-Rcpp::List aptdaggp_response_predict(const arma::mat& cout,
+Rcpp::List radgp_response_predict(const arma::mat& cout,
                                      const arma::vec& y, 
                                      const arma::mat& coords, double rho,
                                      const arma::mat& theta_mcmc, 
@@ -310,7 +310,7 @@ Rcpp::List aptdaggp_response_predict(const arma::mat& cout,
   
   arma::uvec layers;
   arma::field<arma::uvec> predict_dag = 
-    aptdagbuild_testset(coords, cout, rho, layers, M);
+    radgpbuild_testset(coords, cout, rho, layers, M);
   arma::uvec pred_order = arma::sort_index(layers);
   
   arma::mat yout_mcmc = arma::zeros(ntest, mcmc);
@@ -416,7 +416,7 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
 
 
 //[[Rcpp::export]]
-Rcpp::List aptdaggp_latent_predict(const arma::mat& cout,
+Rcpp::List radgp_latent_predict(const arma::mat& cout,
                                      const arma::mat& w, 
                                      const arma::mat& coords, double rho,
                                      const arma::mat& theta_mcmc, 
@@ -431,7 +431,7 @@ Rcpp::List aptdaggp_latent_predict(const arma::mat& cout,
   
   arma::uvec layers;
   arma::field<arma::uvec> predict_dag = 
-    aptdagbuild_testset(coords, cout, rho, layers, M);
+    radgpbuild_testset(coords, cout, rho, layers, M);
   arma::uvec pred_order = arma::sort_index(layers);
   
   arma::mat wout_mcmc = arma::zeros(ntest, mcmc);

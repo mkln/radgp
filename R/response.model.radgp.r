@@ -35,12 +35,12 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
   unif_bounds <- rbind(unif_bounds, nugg_bounds)
   
   metrop_sd <- 0.15
-  aptdag_time <- system.time({
-    aptdag_model <- aptdaggp_response(y, coords_train, rho=rho, mcmc, n_threads,
+  radgp_time <- system.time({
+    radgp_model <- aptdaggp_response(y, coords_train, rho=rho, mcmc, n_threads,
                                       param_start, metrop_sd, unif_bounds, 
                                       nugg_prior, printn) })
   
-  result <- c(aptdag_model, list(time=aptdag_time))
+  result <- c(radgp_model, list(time=radgp_time))
   
   result$nugg <- result$theta[4,]
   result$theta <- result$theta[1:3,]
