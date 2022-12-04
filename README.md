@@ -2,7 +2,7 @@
 
 This package implements RadGP as introduced in 
 [*Radial Neighbors for Provably Accurate Scalable Approximations of Gaussian Processes*](https://arxiv.org/abs/2211.14692)
-(Yichen Zhu, Michele Peruzzi, Cheng Li, David B. Dunson, 2022).
+(Yichen Zhu, Michele Peruzzi, Cheng Li and David B. Dunson, 2022).
 
 ```
 install.packages(c("GPvecchia", "Rcpp", "RcppArmadillo", "RcppEigen"))
