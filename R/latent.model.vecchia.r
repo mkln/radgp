@@ -40,7 +40,7 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   nn_dag <- apply(nn_dag_mat, 1, function(x){ x[!is.na(x)][-1]-1 })
   
   maxmin_time <- system.time({    
-    latent_model <- aptdaggp_custom_latent(y_mm, coords_mm, nn_dag, mcmc, n_threads,
+    latent_model <- radgp_custom_latent(y_mm, coords_mm, nn_dag, mcmc, n_threads,
                                       theta_start, nugg_start,
                                       metrop_sd, unif_bounds, 
                                       nugg_prior, printn) })

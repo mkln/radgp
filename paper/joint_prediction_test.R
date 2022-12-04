@@ -3,7 +3,7 @@ library(tidyverse)
 library(magrittr)
 library(Matrix)
 #library(reticulate)
-library(aptdag)
+library(radgp)
 library(ggplot2)
 library(gridExtra)
 library(RcppHungarian)
@@ -95,7 +95,23 @@ fun_gamma <- function(v){
   return(mean(gamma(v)))
 }
 
-coverage <- function(zhat_mcmc, ztrue, alpha=0.9){
+SW <- function(mat1, mat2, rseed=10, L=500){
+  n = nrow(mat1)
+  d = ncol(mat1)
+  set.seed(rseed)
+  directs = matrix(rnorm(L*d),nrow=d,ncol=L)
+  directs = t(t(directs) / sqrt(colSums(directs^2)))
+  mat1p = mat1 %*% directs
+  mat2p = mat2 %*% directs
+  S = 0
+  for (l in 1:L){
+    S = S + discrete_W_1d(mat1p[,l],mat2p[,l])
+  }
+  S = S/L
+  return(S)
+}
+
+coverage <- function(zhat_mcmc, ztrue, alpha=0.95){
   ## zhat_mcmc is a n_mcmc\times ntest matrix, ztrue is a ntest length vector
   s = 0
   n_mcmc = dim(zhat_mcmc)[1]
@@ -110,7 +126,7 @@ coverage <- function(zhat_mcmc, ztrue, alpha=0.9){
   return(s/n_mcmc)
 }
 
-CI <- function(lst,alpha=0.9){
+CI <- function(lst,alpha=0.90){
   out = c(mean(lst),0,0)
   n = length(lst)
   lst_sort = sort(lst)
@@ -127,6 +143,7 @@ CI <- function(lst,alpha=0.9){
 }
 
 ##-----------------------------------------------------------------------
+set.seed(10)
 ## Specify global parameter
 model='latent'
 # model='response'
@@ -145,6 +162,7 @@ theta[1] = - log(cov_thre/theta[2]) / x_thre^theta[3]
 plates = matrix(c(0.15,0.25,0.45,0.55,0.75,0.85),nrow=2)
 n_region = ncol(plates)^2
 W2_fun_tensor = array(rnorm(n_region*3*nexp*length(fun_lst)),dim=c(n_region,3,nexp,length(fun_lst)))
+SW_tensor = array(rnorm(n_region*3*nexp),dim=c(n_region,3,nexp))
 n_reports = 6 ## report theta[1], theta[2], theta[3], nugget, MSE, coverage
 reports_tensor = array(rnorm(3*nexp*n_reports),dim=c(3,nexp,n_reports))
 time_ls = matrix(0,nrow=nexp,ncol=3)
@@ -194,7 +212,7 @@ for (iexp in 1:nexp){
   #-------------------------------------------------------------------------
   # gen data from full GP
   # theta : phi, sigmasq, nu, nugg
-  CC <- aptdag::Correlationc(coords_all, coords_all, theta, TRUE) 
+  CC <- radgp::Correlationc(coords_all, coords_all, theta, TRUE) 
   CC_train <- CC[1:ntrain,1:ntrain]
   CC_train_inv <- solve(CC_train)
   LC_train <- t(chol(CC_train))
@@ -320,7 +338,7 @@ for (iexp in 1:nexp){
   time_ls[iexp,] = c(t2-t0,t5-t3,t6-t5+t4-t3)
   
   ##----------------------------------------------------------------------------
-  ## Compare true mc samples with altdag mcmc samples on maxima of local regions
+  ## Compare true mc samples with altdag mcmc samples in local regions
   dat_fun <- data.frame(matrix(0,nrow=mc_true*n_region*4,ncol=3))
   colnames(dat_fun) <- c('region', 'model', 'maximum')
   W2_fun <- matrix(0,nrow=n_region,ncol=3)
@@ -339,10 +357,17 @@ for (iexp in 1:nexp){
                                        discrete_W_1d(samples_true, samples_nngp), 
                                        discrete_W_1d(samples_true, samples_inngp))      
       }
+    SW_tensor[ind,,iexp] = c(SW(ztrue_mc[,region_lst[[ind]]],zalt_mc[,region_lst[[ind]]]),
+                             SW(ztrue_mc[,region_lst[[ind]]],znngp_mc[,region_lst[[ind]]]),
+                             SW(ztrue_mc[,region_lst[[ind]]],zinngp_mc[,region_lst[[ind]]]))
     }
   }
   print(paste(iexp, 'th outer loop finished', sep=''))
 }  
+
+
+
+
 
 reports_summary = array(0, dim=c(3,n_reports,3))  ## the last dimension represents mean and lower & upper confidence bound
 for (i in 1:3){
@@ -351,21 +376,23 @@ for (i in 1:3){
   }
 }
 
-fun_summary = array(0, dim=c(3,2,length(fun_lst)))
+fun_summary = array(0, dim=c(3,2,length(fun_lst)+1))
 for (l in 1:3){
   for (k in 1:length(fun_lst)){
     fun_samples = as.vector(W2_fun_tensor[,l,,k])
     fun_summary[l,1,k] = mean(fun_samples)
     fun_summary[l,2,k] = sd(fun_samples)
   }
+  fun_summary[l,1,length(fun_lst)+1] = mean(SW_tensor[,l,])
+  fun_summary[l,2,length(fun_lst)+1] = sd(SW_tensor[,l,])  
 }
 
-fun_dat <- data.frame(matrix(0,nrow=n_region*3*nexp*length(fun_lst),ncol=3))
+fun_dat <- data.frame(matrix(0,nrow=n_region*3*nexp*(length(fun_lst)+1),ncol=3))
 colnames(fun_dat) <- c('W2_value', 'Test_fun', 'Method')
 method_names = c('RadGP','V-Pred','NNGP')
 loc = 0
 for (i in 1:3){
-  gapi = n_region*nexp*length(fun_lst)
+  gapi = n_region*nexp*(length(fun_lst)+1)
   fun_dat$Method[((i-1)*gapi+1):(i*gapi)] = method_names[i]
   for (j in 1:length(fun_lst)){
     gapj = n_region*nexp
@@ -373,6 +400,10 @@ for (i in 1:3){
     fun_dat$W2_value[(loc+1):(loc+gapj)] = as.vector(W2_fun_tensor[,i,,j])
     loc = loc + gapj
   }
+  gapj = n_region*nexp
+  fun_dat$Test_fun[(loc+1):(loc+gapj)] = 'Sliced W2'
+  fun_dat$W2_value[(loc+1):(loc+gapj)] = as.vector(SW_tensor[,i,])
+  loc = loc + gapj  
 }
 
 print('End of running.')
@@ -382,15 +413,72 @@ print('aptdag summary')
 print(reports_summary[1,,])
 print('vecchia maxmin summary')
 print(reports_summary[2,,])
+print('vecchia maxmin pred summary')
+print(reports_summary[3,,])
 
-
-W2_limit = 0.075
 fun_label_select = fun_label[2:5]
-fun_dat_select = fun_dat[which((fun_dat$W2_value<W2_limit)&(fun_dat$Test_fun %in% fun_label_select)),]
+fun_label_select = c("Mean","Mean of Relu","Median",'Sliced W2')
+fun_dat_select = fun_dat[which(fun_dat$Test_fun %in% fun_label_select),]
 ggplot(fun_dat_select) +
-  geom_boxplot(aes(y=W2_value,x=Method),fill='lightgoldenrod1') + ggtitle(paste(fun_label[i],sep='')) + 
-  theme_minimal(base_size = 30) + labs(y='W2 distnace',x=NULL,title=NULL) +
-  theme(plot.title = element_text(hjust = 0.5)) + facet_wrap(~Test_fun, nrow=1)
+  geom_boxplot(aes(y=W2_value,x=Method,fill=Method)) + ggtitle(paste(fun_label[i],sep='')) + ylim(0, 0.1) +
+  theme_minimal(base_size = 30) + labs(y='W2 distnace',x=NULL,title=NULL) + 
+  theme(plot.title = element_text(hjust = 0.5),legend.position = "none") + facet_wrap(~Test_fun, nrow=1) 
+
+for (k in 1:length(fun_lst)){
+  print(paste('fun:', fun_label[[k]]))
+  print(fun_summary[,,k])
+}
+print('SW:')
+print(fun_summary[,,length(fun_lst)+1])
+
+## plot sliced W-2 values for each local region
+SW_dat <- data.frame(matrix(0,nrow=n_region*3*nexp,ncol=3))
+colnames(SW_dat) <- c('W2_value', 'Region', 'Method')
+loc = 0
+for (i in 1:3){
+  gapi = n_region*nexp
+  SW_dat$Method[((i-1)*gapi+1):(i*gapi)] = method_names[i]
+  for (j in 1:n_region){
+    gapj = nexp
+    SW_dat$Region[(loc+1):(loc+gapj)] = j
+    SW_dat$W2_value[(loc+1):(loc+gapj)] = SW_tensor[j,i,]
+    loc = loc + gapj
+  }
+}
+# ggplot(SW_dat) +
+#   geom_boxplot(aes(y=W2_value,x=Method),fill='lightgoldenrod1') + facet_wrap(~Region, nrow=3) 
+#   theme_minimal(base_size = 30) + 
+#   theme(plot.title = element_text(hjust = 0.5)) + 
+
+# ggplot(SW_dat) +
+#   geom_boxplot(aes(y=W2_value,x=Method),fill='lightgoldenrod1')
+  
+ggplot(SW_dat[which(SW_dat$Region<4),]) +
+  geom_boxplot(aes(y=W2_value,x=Method,fill=Method)) + facet_wrap(~Region, nrow=1) +
+  labs(y='Sliced W2',x=NULL,title=NULL) +  theme_minimal(base_size = 30) +
+  scale_colour_manual(values=c("magenta", "#0067f7", 'orange')) +
+  theme(strip.background = element_blank(),strip.text.x = element_blank(),legend.position="none") 
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # plots_lst = vector('list',length(fun_lst))
@@ -422,10 +510,6 @@ ggplot(fun_dat_select) +
 
 
 
-for (k in 1:length(fun_lst)){
-  print(paste('fun:', fun_label[[k]]))
-  print(fun_summary[,,k])
-}
 
 
 
