@@ -42,7 +42,7 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   nn_dag <- apply(nn_dag_mat, 1, function(x){ x[!is.na(x)][-1]-1 })
   
   maxmin_time <- system.time({    
-    response_model <- radgp_custom(y_mm, coords_mm, nn_dag, mcmc, n_threads,
+    response_model <- daggp_custom(y_mm, coords_mm, nn_dag, mcmc, n_threads,
                                       param_start, metrop_sd, unif_bounds, 
                                       nugg_prior, printn) })
   

@@ -147,7 +147,7 @@ Rcpp::List radgp_response(const arma::vec& y,
 
 
 //[[Rcpp::export]]
-Rcpp::List radgp_custom(const arma::vec& y,
+Rcpp::List daggp_custom(const arma::vec& y,
                              const arma::mat& coords,
                              const arma::field<arma::uvec>& dag,
                              int mcmc,
