@@ -5,17 +5,8 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
                                    nugg_prior=NULL, 
                                    nugg_bounds=NULL, printn=10){
   
-  if(is.null(theta_start)){
-    theta_start <- c(5, 1, 1.5)  
-  }
   
-  if(is.null(nugg_start)){
-    nugg_start <- .5
-  }
-  
-  param_start <- c(theta_start, nugg_start)
-  
-  unif_bounds <- matrix(nrow=4, ncol=2)
+  unif_bounds <- matrix(nrow=3, ncol=2)
   if(is.null(theta_prior)){
     unif_bounds[,1] <- 1e-3
     unif_bounds[,2] <- 30
@@ -25,13 +16,24 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
     unif_bounds <- theta_prior[1:3,]
   }
   
+  if(is.null(theta_start)){
+    theta_start <- apply(unif_bounds, 1, mean)
+    theta_start[2] <- 1
+  }
+  
+  if(is.null(nugg_start)){
+    nugg_start <- .5
+  }
   if(is.null(nugg_prior)){
     nugg_prior <- c(2, 1)
   }
   if(is.null(nugg_bounds)){
     nugg_bounds = c(1e-7, Inf)
   } 
+  
   unif_bounds <- rbind(unif_bounds, nugg_bounds)
+  param_start <- c(theta_start, nugg_start)
+  
   
   metrop_sd <- 0.15
   

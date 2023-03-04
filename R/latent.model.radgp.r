@@ -5,18 +5,12 @@ latent.model <- function(y, coords, rho, mcmc, n_threads,
                            nugg_prior=NULL,
                            printn=10){
   
-  if(is.null(theta_start)){
-    theta_start <- c(5, 1, 1.5, 1e-8)  
-  } else {
-    theta_start[4] <- 1e-8
-  }
   
-  if(is.null(nugg_start)){
-    nugg_start <- 1
-  }
+  
+  
   
   if(is.null(theta_prior)){
-    unif_bounds <- matrix(nrow=4, ncol=2)
+    unif_bounds <- matrix(nrow=3, ncol=2)
     unif_bounds[,1] <- 1e-3
     unif_bounds[,2] <- 30
     # nu powerexp
@@ -24,7 +18,16 @@ latent.model <- function(y, coords, rho, mcmc, n_threads,
   } else {
     unif_bounds <- theta_prior[1:3, ]
   }
+  if(is.null(theta_start)){
+    theta_start <- c(apply(unif_bounds[1:3,], 1, mean), 1e-8)  
+  } else {
+    theta_start[4] <- 1e-8
+  }
   
+  
+  if(is.null(nugg_start)){
+    nugg_start <- 1
+  }
   if(is.null(nugg_prior)){
     nugg_prior <- c(2, 1)
   }
@@ -33,7 +36,7 @@ latent.model <- function(y, coords, rho, mcmc, n_threads,
   
   metrop_sd <- 0.15
   radgp_time <- system.time({
-    radgp_model <- radgp_latent(y, coords_train, rho=rho, mcmc, n_threads,
+    radgp_model <- radgp_latent(y, coords, rho=rho, mcmc, n_threads,
                                     theta_start, nugg_start, 
                                     metrop_sd, unif_bounds, 
                                     nugg_prior, printn) })
