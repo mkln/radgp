@@ -9,8 +9,8 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
     unif_bounds <- matrix(nrow=3, ncol=2)
     unif_bounds[,1] <- 1e-3
     unif_bounds[,2] <- 30
-    # nu powerexp
-    unif_bounds[3,] <- c(1.001, 2-.01)
+    # nu matern
+    unif_bounds[3,] <- c(0.5001, 2)
   } else {
     unif_bounds <- theta_prior[1:3, ]
   }
