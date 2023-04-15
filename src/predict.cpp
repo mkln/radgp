@@ -303,6 +303,15 @@ Rcpp::List radgp_response_predict(const arma::mat& cout,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
   
+  //thread safe stuff
+  //int nthreads = 0;
+  //#ifdef _OPENMP
+  //nthreads = omp_get_num_threads();
+  //#endif
+  
+  int bessel_ws_inc = 5;//see bessel_k.c for working space needs
+  double *bessel_ws = (double *) R_alloc(num_threads*bessel_ws_inc, sizeof(double));
+  
   int ntrain = coords.n_rows;
   int ntest = cout.n_rows;
   int mcmc = theta_mcmc.n_cols;
@@ -334,10 +343,10 @@ Rcpp::List radgp_response_predict(const arma::mat& cout,
       arma::uvec px = predict_dag(idagtarget);
       
       arma::mat CC = Correlationf(cxall, ix, ix, 
-                                  theta, false, true);
-      arma::mat CPt = Correlationf(cxall, px, ix, theta, false, false);
+                                  theta, bessel_ws, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, false);
       arma::mat PPi = 
-        arma::inv_sympd( Correlationf(cxall, px, px, theta, false, true) );
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, true) );
       
       arma::vec ht = PPi * CPt;
       double sqrtR = sqrt( arma::conv_to<double>::from(
@@ -368,6 +377,15 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
   
+  //thread safe stuff
+  //int nthreads = 0;
+  //#ifdef _OPENMP
+  //nthreads = omp_get_num_threads();
+  //#endif
+  
+  int bessel_ws_inc = 5;//see bessel_k.c for working space needs
+  double *bessel_ws = (double *) R_alloc(num_threads*bessel_ws_inc, sizeof(double));
+  
   int ntrain = coords.n_rows;
   int ntest = cout.n_rows;
   int mcmc = theta_mcmc.n_cols;
@@ -394,10 +412,10 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
       arma::uvec px = dag(itarget);
       
       arma::mat CC = Correlationf(cxall, ix, ix, 
-                                  theta, false, true);
-      arma::mat CPt = Correlationf(cxall, px, ix, theta, false, false);
+                                  theta, bessel_ws, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, false);
       arma::mat PPi = 
-        arma::inv_sympd( Correlationf(cxall, px, px, theta, false, true) );
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, true) );
       
       arma::vec ht = PPi * CPt;
       double sqrtR = sqrt( arma::conv_to<double>::from(
@@ -423,6 +441,15 @@ Rcpp::List radgp_latent_predict(const arma::mat& cout,
                                      int M,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
+  
+  //thread safe stuff
+  //int nthreads = 0;
+  //#ifdef _OPENMP
+  //nthreads = omp_get_num_threads();
+  //#endif
+  
+  int bessel_ws_inc = 5;//see bessel_k.c for working space needs
+  double *bessel_ws = (double *) R_alloc(num_threads*bessel_ws_inc, sizeof(double));
   
   int ntrain = coords.n_rows;
   int ntest = cout.n_rows;
@@ -455,10 +482,10 @@ Rcpp::List radgp_latent_predict(const arma::mat& cout,
       arma::uvec px = predict_dag(idagtarget);
       
       arma::mat CC = Correlationf(cxall, ix, ix, 
-                                  theta, false, true);
-      arma::mat CPt = Correlationf(cxall, px, ix, theta, false, false);
+                                  theta, bessel_ws, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, false);
       arma::mat PPi = 
-        arma::inv_sympd( Correlationf(cxall, px, px, theta, false, true) );
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, true) );
       
       arma::vec ht = PPi * CPt;
       double sqrtR = sqrt( arma::conv_to<double>::from(
@@ -489,6 +516,15 @@ arma::mat vecchiagp_latent_predict(const arma::mat& cout,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
   
+  //thread safe stuff
+  //int nthreads = 0;
+  //#ifdef _OPENMP
+  //nthreads = omp_get_num_threads();
+  //#endif
+  
+  int bessel_ws_inc = 5;//see bessel_k.c for working space needs
+  double *bessel_ws = (double *) R_alloc(num_threads*bessel_ws_inc, sizeof(double));
+  
   int ntrain = coords.n_rows;
   int ntest = cout.n_rows;
   int mcmc = theta_mcmc.n_cols;
@@ -515,10 +551,10 @@ arma::mat vecchiagp_latent_predict(const arma::mat& cout,
       arma::uvec px = dag(itarget);
       
       arma::mat CC = Correlationf(cxall, ix, ix, 
-                                  theta, false, true);
-      arma::mat CPt = Correlationf(cxall, px, ix, theta, false, false);
+                                  theta, bessel_ws, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, false);
       arma::mat PPi = 
-        arma::inv_sympd( Correlationf(cxall, px, px, theta, false, true) );
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, true) );
       
       arma::vec ht = PPi * CPt;
       double sqrtR = sqrt( arma::conv_to<double>::from(

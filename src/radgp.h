@@ -4,6 +4,7 @@
 #include "RcppArmadillo.h"
 #include <RcppEigen.h>
 //#include <Eigen/CholmodSupport>
+
 #include "nnsearch.h"
 #include "covariance.h"
 #include "interrupt.h"
@@ -30,6 +31,8 @@ public:
   double rho;
   
   Eigen::SparseMatrix<double> A, H, Ci;
+  
+  double * bessel_ws;
   
   double logdens(const arma::vec& theta);
   

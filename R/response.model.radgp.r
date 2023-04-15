@@ -6,9 +6,6 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
                            nugg_bounds=NULL,
                            printn=10){
   
- 
-  
-  
   unif_bounds <- matrix(nrow=3, ncol=2)
   if(is.null(theta_prior)){
     unif_bounds[,1] <- 1e-3
