@@ -8,6 +8,8 @@ predict.response.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_t
     rho <- obj$rho
   }
   
+  covar <- obj$covar
+  
   mcmc_burn <- ncol(obj$theta) - mcmc_keep
   if(mcmc_burn > 0){
     param <- rbind(obj$theta[,-(1:mcmc_burn)],
@@ -18,7 +20,7 @@ predict.response.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_t
   
   result <- radgp_response_predict(newcoords, obj$y, 
                                       obj$coords, rho, 
-                                      param, obj$M, n_threads)
+                                      param, obj$M, covar, n_threads)
   
   return(result)
 }

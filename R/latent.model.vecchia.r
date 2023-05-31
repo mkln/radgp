@@ -3,7 +3,9 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
                                  theta_prior=NULL,
                                  nugg_start=NULL,
                                  nugg_prior=NULL,
-                                 unif_bounds=NULL, printn=10){
+                                 unif_bounds=NULL, 
+                                 covariance_model="pexp",
+                                 printn=10){
   
   if(is.null(theta_prior)){
     unif_bounds <- matrix(nrow=3, ncol=2)
@@ -38,11 +40,18 @@ latent.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   nn_dag_mat <- GPvecchia:::findOrderedNN_kdtree2(coords_mm, m)
   nn_dag <- apply(nn_dag_mat, 1, function(x){ x[!is.na(x)][-1]-1 })
   
+  if(covariance_model == "pexp"){ 
+    covar <- 0
+  } else {
+    covar <- 1
+  }
+  
   maxmin_time <- system.time({    
     latent_model <- daggp_custom_latent(y_mm, coords_mm, nn_dag, mcmc, n_threads,
                                       theta_start, nugg_start,
                                       metrop_sd, unif_bounds, 
-                                      nugg_prior, printn) })
+                                      nugg_prior,
+                                      covar, printn) })
   
   latent_model$theta <- latent_model$theta[1:3,]
   

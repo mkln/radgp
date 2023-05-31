@@ -8,6 +8,8 @@ predict.latent.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_thr
     rho <- obj$rho
   }
   
+  covar <- obj$covar
+  
   mcmc_burn <- ncol(obj$theta) - mcmc_keep
   if(mcmc_burn > 0){
     theta <- obj$theta[,-(1:mcmc_burn)]
@@ -22,7 +24,7 @@ predict.latent.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_thr
   
   result <- radgp_latent_predict(newcoords, w, 
                                       obj$coords, rho, 
-                                      theta, obj$M, n_threads)
+                                      theta, obj$M, covar, n_threads)
 
   nout <- nrow(result$wout)
   tau_mcmc <- matrix(1, nrow=nout, ncol=1) %*% matrix(nugg^.5, nrow=1, ncol=mcmc_keep)

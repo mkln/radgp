@@ -118,6 +118,7 @@ Rcpp::List radgp_response(const arma::vec& y,
                     double metrop_sd,
                     const arma::mat& theta_unif_bounds,
                     const arma::vec& tausq_prior,
+                    int covar,
                     int num_prints = 10){
   
   int print_every = num_prints>0? round(mcmc/num_prints) : 0;
@@ -126,7 +127,7 @@ Rcpp::List radgp_response(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  DagGP adag(y, coords, rho, 0, num_threads); // 0 for response
+  DagGP adag(y, coords, rho, 0, covar, num_threads); // 0 for response
   
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
@@ -141,7 +142,8 @@ Rcpp::List radgp_response(const arma::vec& y,
     Rcpp::Named("y") = y,
     Rcpp::Named("coords") = coords,
     Rcpp::Named("ldens") = logdens_mcmc,
-    Rcpp::Named("theta") = theta_mcmc
+    Rcpp::Named("theta") = theta_mcmc,
+    Rcpp::Named("covar") = covar
   );
 }
 
@@ -156,6 +158,7 @@ Rcpp::List daggp_custom(const arma::vec& y,
                              double metrop_sd,
                              const arma::mat& theta_unif_bounds,
                              const arma::vec& tausq_prior,
+                             int covar,
                              int num_prints = 10){
   
   int print_every = num_prints>0? round(mcmc/num_prints) : 0;
@@ -165,7 +168,7 @@ Rcpp::List daggp_custom(const arma::vec& y,
   omp_set_num_threads(num_threads);
 #endif
   
-  DagGP adag(y, coords, dag, 0, num_threads); // 0 for response
+  DagGP adag(y, coords, dag, 0, covar, num_threads); // 0 for response
   
   arma::mat theta_mcmc;
   arma::vec logdens_mcmc;
@@ -177,7 +180,8 @@ Rcpp::List daggp_custom(const arma::vec& y,
       Rcpp::Named("M") = adag.M,
       Rcpp::Named("dag") = adag.dag,
       Rcpp::Named("ldens") = logdens_mcmc,
-      Rcpp::Named("theta") = theta_mcmc
+      Rcpp::Named("theta") = theta_mcmc,
+      Rcpp::Named("covar") = covar
     );
 }
 

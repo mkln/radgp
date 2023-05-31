@@ -11,6 +11,8 @@ predict.response.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1
     param <- rbind(obj$theta, obj$nugg)
   }
   
+  covar <- obj$covar
+  
   if(!independent){
     ixmm_pred <- GPvecchia::order_maxmin_exact_obs_pred(obj$coords, newcoords)$ord_pred
   
@@ -20,7 +22,7 @@ predict.response.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1
     nn_dag <- apply(nn_dag_mat, 1, function(x){ x[!is.na(x)][-1]-1 })
     
     result <- vecchiagp_response_predict(newcoords_mm, obj$y, obj$coords, nn_dag,
-                                        param, n_threads)
+                                        param, covar, n_threads)
     
     return(list(yout = result[order(ixmm_pred),],
                 dag = nn_dag,
@@ -34,7 +36,7 @@ predict.response.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1
     nn_dag <- c(obj$dag, pred_dag)
     
     result <- vecchiagp_response_predict(newcoords, obj$y, obj$coords, nn_dag,
-                                         param, n_threads)
+                                         param, covar, n_threads)
     
     return(list(yout = result,
                 dag = nn_dag))

@@ -1,22 +1,21 @@
 library(Matrix)
-library(aptdag)
+library(radgp)
 library(dplyr)
 
 coords <- cbind(runif(400), runif(400))
-  #as.matrix(expand.grid(xx <- seq(0,1,length.out=20), xx))
-# phi sigmasq nugget
-theta <- c(1,1,1.5,0)
+theta <- c(1,1,1.5,0) # phi sigmasq nu nugget
+cov_model <- 0 # 0=power exponential, [anything else]=matern
+CC <- radgp::Correlationc(coords, coords, theta, 0, T)
 rho <- 1
+radgp_out <- radgp_build(coords, theta, rho, cov_model) # last input 0 for power exp, else matern
 
-aptgp_out <- aptdaggp(coords, theta, .2)
+Hmat_a <- radgp_out$H
+ord <- order(radgp_out$layers)
 
-Hmat_a <- aptgp_out$H
-ord <- order(aptgp_out$layers)
-
-layers_o <- aptgp_out$layers[ord,] %>% as.numeric()
+layers_o <- radgp_out$layers[ord,] %>% as.numeric()
 coords_o <- coords[ord,]
 Hord_a <- Hmat_a[ord, ord]
-Aord_a <- aptgp_out$A[ord, ord]
+Aord_a <- radgp_out$A[ord, ord]
 
 image(Hord_a)
 
@@ -24,8 +23,8 @@ i <- 399
 parents_ofi <- setdiff(which(Hord_a[i,] != 0), i)
 length(parents_ofi)
 
-aptdag_n_children <- (Hord_a %>% apply(2, \(x) sum(x!=0)-1))
-aptdag_n_parents <- (Hord_a %>% apply(1, \(x) sum(x!=0)-1))
+radgp_n_children <- (Hord_a %>% apply(2, \(x) sum(x!=0)-1))
+radgp_n_parents <- (Hord_a %>% apply(1, \(x) sum(x!=0)-1))
 
 
 overlap_mat <- matrix(0, nrow(coords), nrow(coords))
@@ -47,12 +46,12 @@ for(i in 1:nrow(coords)){
 }
 
 add_mat_min <- apply(add_mat, 1, \(x) min(x[x!=0]))
-cbind(aptdag_n_parents, add_mat_min)
+cbind(radgp_n_parents, add_mat_min)
 
 j <- 372
 layers_o[j]
 
-layers_o[parents_of]
+
 
 children_of <- setdiff(which(Hord_a[,i] != 0), i)
 
@@ -95,7 +94,7 @@ aptdag_prec <- crossprod(Hmat_a)
 image(aptdag_prec)
 
 
-CC <- aptdag::Correlationc(coords, coords, theta, T)
+CC <- radgp::Correlationc(coords, coords, theta, 0, T)
 image(solve(crossprod(Hmat_a)))
 
 

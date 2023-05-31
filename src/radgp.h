@@ -51,6 +51,11 @@ public:
   // 1 = latent CG
   int model_type;
   
+  // info about covariance model:
+  // 0 = power exponential
+  // anything else = matern
+  int covar;
+  
   // stuff for latent model
   arma::vec w;
   double prec_det;
@@ -60,11 +65,12 @@ public:
   //double ldens;
   DagGP(const arma::vec& y,
     const arma::mat& coords, double rho, int model=0,
+    int covariance_model=0,
     int nthread=0);
   DagGP(const arma::vec& y,
          const arma::mat& coords, 
          const arma::field<arma::uvec>& custom_dag,
-         int model=0,
+         int model=0, int covariance_model=0,
          int nthread=0);
   
   // utils

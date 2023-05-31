@@ -3,6 +3,7 @@ latent.model <- function(y, coords, rho, mcmc, n_threads,
                            theta_prior=NULL, 
                            nugg_start=NULL,
                            nugg_prior=NULL,
+                           covariance_model="pexp",
                            printn=10){
   
   
@@ -34,12 +35,18 @@ latent.model <- function(y, coords, rho, mcmc, n_threads,
   
   unif_bounds <- rbind(unif_bounds, theta_start[4] + c(-1e-9, +1e-9))
   
+  if(covariance_model == "pexp"){ 
+    covar <- 0
+  } else {
+    covar <- 1
+  }
+  
   metrop_sd <- 0.15
   radgp_time <- system.time({
     radgp_model <- radgp_latent(y, coords, rho=rho, mcmc, n_threads,
                                     theta_start, nugg_start, 
                                     metrop_sd, unif_bounds, 
-                                    nugg_prior, printn) })
+                                    nugg_prior, covar, printn) })
   
   radgp_model$theta <- radgp_model$theta[1:3,]
   

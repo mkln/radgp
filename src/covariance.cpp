@@ -97,6 +97,7 @@ arma::mat Correlationf(
     const arma::uvec& ix, const arma::uvec& iy,
     const arma::vec& theta,
     double * bessel_ws,
+    int covar,
     bool same){
   // these are not actually correlation functions because they are reparametrized to have 
   // C(0) = 1/reparam
@@ -107,9 +108,12 @@ arma::mat Correlationf(
   double nu = theta(2);
   double nugg = theta(3);
   
-  //powerexp_inplace(res, coords, ix, iy, phi, nu, sigmasq, nugg, same);
-  
-  matern_inplace(res, coords, ix, iy, phi, nu, sigmasq, bessel_ws, nugg, same);
+  if(covar==0){
+    powerexp_inplace(res, coords, ix, iy, phi, nu, sigmasq, nugg, same); 
+  } else {
+    matern_inplace(res, coords, ix, iy, phi, nu, sigmasq, bessel_ws, nugg, same);    
+  }
+
   return res;
   
 
@@ -120,6 +124,7 @@ arma::mat Correlationc(
     const arma::mat& coordsx,
     const arma::mat& coordsy,
     const arma::vec& theta,
+    int covar,
     bool same){
 
   int nthreads = 0;
@@ -133,13 +138,13 @@ arma::mat Correlationc(
   if(same){
     arma::uvec ix = arma::regspace<arma::uvec>(0, coordsx.n_rows-1);
     
-    return Correlationf(coordsx, ix, ix, theta, bessel_ws, same);
+    return Correlationf(coordsx, ix, ix, theta, bessel_ws, covar, same);
   } else {
     arma::mat coords = arma::join_vert(coordsx, coordsy);
     arma::uvec ix = arma::regspace<arma::uvec>(0, coordsx.n_rows-1);
     arma::uvec iy = arma::regspace<arma::uvec>(coordsx.n_rows, coords.n_rows-1);
     
-    return Correlationf(coords, ix, iy, theta, bessel_ws, same);
+    return Correlationf(coords, ix, iy, theta, bessel_ws, covar, same);
   }
   
 }
@@ -148,7 +153,8 @@ arma::mat Correlationc(
 //[[Rcpp::export]]
 arma::mat gpkernel(
     const arma::mat& coordsx,
-    const arma::vec& theta){
+    const arma::vec& theta,
+    int covar){
   
   int nthreads = 0;
 #ifdef _OPENMP
@@ -159,6 +165,6 @@ arma::mat gpkernel(
   
   
   arma::uvec ix = arma::regspace<arma::uvec>(0, coordsx.n_rows-1);
-  return Correlationf(coordsx, ix, ix, theta, bessel_ws, true);
+  return Correlationf(coordsx, ix, ix, theta, bessel_ws, covar, true);
 }
 

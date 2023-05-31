@@ -6,6 +6,7 @@ DagGP::DagGP(
     const arma::mat& coords_in, 
     double rho_in,
     int model,
+    int covariance_model,
     int nthread){
   y = y_in;
   coords = coords_in;
@@ -16,10 +17,11 @@ DagGP::DagGP(
   dag = radialndag(coords, rho, layers, M);
   oneuv = arma::ones<arma::uvec>(1);
   
-  model_type = model;
+  model_type = model; // response or latent
+  covar = covariance_model; // pexp or matern
   prec_inited = false;
   
-  n_threads = nthread;
+  n_threads = nthread == 0? 1 : nthread;
   
   //thread safe stuff
   //int nthreads = 0;
@@ -36,7 +38,9 @@ DagGP::DagGP(
   const arma::vec& y_in,
   const arma::mat& coords_in, 
   const arma::field<arma::uvec>& custom_dag,
-  int model, int nthread){
+  int model, 
+  int covariance_model,
+  int nthread){
   y = y_in;
   coords = coords_in;
   nr = coords.n_rows;
@@ -45,10 +49,11 @@ DagGP::DagGP(
   dag = custom_dag;
   oneuv = arma::ones<arma::uvec>(1);
   
-  model_type = model;
+  model_type = model; // response or latent
+  covar = covariance_model; // pexp or matern
   prec_inited = false;
   
-  n_threads = nthread;
+  n_threads = nthread == 0? 1 : nthread;
   
   int bessel_ws_inc = 5;//see bessel_k.c for working space needs
   bessel_ws = (double *) R_alloc(n_threads*bessel_ws_inc, sizeof(double));
@@ -75,10 +80,10 @@ double DagGP::logdens(const arma::vec& theta){
     arma::uvec px = dag(i);
     
     arma::mat CC = Correlationf(coords, ix, ix, 
-                                theta, bessel_ws, true);
-    arma::mat CPt = Correlationf(coords, px, ix, theta, bessel_ws, false);
+                                theta, bessel_ws, covar, true);
+    arma::mat CPt = Correlationf(coords, px, ix, theta, bessel_ws, covar, false);
     arma::mat PPi = 
-      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, true) );
+      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, covar, true) );
     
     arma::vec ht = PPi * CPt;
     double sqrtR = sqrt( arma::conv_to<double>::from(
@@ -114,10 +119,10 @@ void DagGP::make_precision_ahci(const arma::vec& theta){
     arma::uvec px = dag(i);
   
     arma::mat CC = Correlationf(coords, ix, ix, 
-                                theta, bessel_ws, true);
-    arma::mat CPt = Correlationf(coords, px, ix, theta, bessel_ws, false);
+                                theta, bessel_ws, covar, true);
+    arma::mat CPt = Correlationf(coords, px, ix, theta, bessel_ws, covar, false);
     arma::mat PPi = 
-      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, true) );
+      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, covar, true) );
     
     arma::vec ht = PPi * CPt;
     double sqrtR = sqrt( arma::conv_to<double>::from(
@@ -185,10 +190,10 @@ void DagGP::make_precision_hci_core(
     arma::uvec px = dag(i);
     
     arma::mat CC = Correlationf(coords, ix, ix, 
-                                theta, bessel_ws, true);
-    arma::mat CPt = Correlationf(coords, px, ix, theta, bessel_ws, false);
+                                theta, bessel_ws, covar, true);
+    arma::mat CPt = Correlationf(coords, px, ix, theta, bessel_ws, covar, false);
     arma::mat PPi = 
-      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, true) );
+      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, covar, true) );
     
     ht(i) = PPi * CPt;
     sqrtR(i) = sqrt( arma::conv_to<double>::from(
@@ -258,7 +263,8 @@ void DagGP::make_precision_hci_core(
 Eigen::SparseMatrix<double> hmat_from_dag(
     const arma::mat& coords,
     const arma::field<arma::uvec>& dag, 
-    const arma::vec& theta){
+    const arma::vec& theta,
+    int covar){
   
   //thread safe stuff
   int nthreads = 0;
@@ -284,10 +290,10 @@ Eigen::SparseMatrix<double> hmat_from_dag(
     arma::uvec px = dag(i);
     
     arma::mat CC = Correlationf(coords, ix, ix, 
-                                theta, bessel_ws, true);
-    arma::mat CPt = Correlationf(coords, px, ix, theta, bessel_ws, false);
+                                theta, bessel_ws, covar, true);
+    arma::mat CPt = Correlationf(coords, px, ix, theta, bessel_ws, covar, false);
     arma::mat PPi = 
-      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, true) );
+      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, covar, true) );
     
     arma::vec ht = PPi * CPt;
     double sqrtR = sqrt( arma::conv_to<double>::from(
@@ -315,7 +321,8 @@ arma::vec pred_from_dag(
     const arma::mat& coords,
     const arma::field<arma::uvec>& dag, 
     const arma::vec& theta,
-    const arma::vec& urng){
+    const arma::vec& urng,
+    int covar){
 
   int nr = coords.n_rows;
   if(nr != urng.n_elem){
@@ -339,10 +346,10 @@ arma::vec pred_from_dag(
     arma::uvec px = dag(i);
     
     arma::mat CC = Correlationf(coords, ix, ix, 
-                                theta, bessel_ws, true);
-    arma::mat CP = Correlationf(coords, ix, px, theta, bessel_ws, false);
+                                theta, bessel_ws, covar, true);
+    arma::mat CP = Correlationf(coords, ix, px, theta, bessel_ws, covar, false);
     arma::mat PPi = 
-      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, true) );
+      arma::inv_sympd( Correlationf(coords, px, px, theta, bessel_ws, covar, true) );
     
     arma::mat H = CP * PPi;
     double sqrtR = sqrt( arma::conv_to<double>::from(

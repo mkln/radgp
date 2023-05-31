@@ -4,6 +4,7 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
                            nugg_start=NULL,
                            nugg_prior=NULL,
                            nugg_bounds=NULL,
+                           covariance_model="pexp",
                            printn=10){
   
   unif_bounds <- matrix(nrow=3, ncol=2)
@@ -34,11 +35,17 @@ response.model <- function(y, coords, rho, mcmc, n_threads,
   unif_bounds <- rbind(unif_bounds, nugg_bounds)
   param_start <- c(theta_start, nugg_start)
   
+  if(covariance_model == "pexp"){ 
+    covar <- 0
+  } else {
+    covar <- 1
+  }
+  
   metrop_sd <- 0.15
   radgp_time <- system.time({
     radgp_model <- radgp_response(y, coords, rho=rho, mcmc, n_threads,
                                       param_start, metrop_sd, unif_bounds, 
-                                      nugg_prior, printn) })
+                                      nugg_prior, covar, printn) })
   
   result <- c(radgp_model, list(time=radgp_time))
   

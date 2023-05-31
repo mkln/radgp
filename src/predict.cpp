@@ -300,6 +300,7 @@ Rcpp::List radgp_response_predict(const arma::mat& cout,
                                      const arma::mat& coords, double rho,
                                      const arma::mat& theta_mcmc, 
                                      int M,
+                                     int covar,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
   
@@ -325,7 +326,7 @@ Rcpp::List radgp_response_predict(const arma::mat& cout,
   arma::mat yout_mcmc = arma::zeros(ntest, mcmc);
   arma::mat random_stdnormal = arma::randn(mcmc, ntest);
   
-  Rcpp::Rcout << "AptDAG-GP predicting (response model)" << endl;
+  Rcpp::Rcout << "RadGP predicting (response model)" << endl;
 #ifdef _OPENMP
 #pragma omp parallel for 
 #endif
@@ -343,10 +344,10 @@ Rcpp::List radgp_response_predict(const arma::mat& cout,
       arma::uvec px = predict_dag(idagtarget);
       
       arma::mat CC = Correlationf(cxall, ix, ix, 
-                                  theta, bessel_ws, true);
-      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, false);
+                                  theta, bessel_ws, covar, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, covar, false);
       arma::mat PPi = 
-        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, true) );
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, covar, true) );
       
       arma::vec ht = PPi * CPt;
       double sqrtR = sqrt( arma::conv_to<double>::from(
@@ -374,6 +375,7 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
                                      const arma::mat& coords, 
                                      const arma::field<arma::uvec>& dag,
                                      const arma::mat& theta_mcmc, 
+                                     int covar,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
   
@@ -412,10 +414,10 @@ arma::mat vecchiagp_response_predict(const arma::mat& cout,
       arma::uvec px = dag(itarget);
       
       arma::mat CC = Correlationf(cxall, ix, ix, 
-                                  theta, bessel_ws, true);
-      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, false);
+                                  theta, bessel_ws, covar, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, covar, false);
       arma::mat PPi = 
-        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, true) );
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, covar, true) );
       
       arma::vec ht = PPi * CPt;
       double sqrtR = sqrt( arma::conv_to<double>::from(
@@ -439,6 +441,7 @@ Rcpp::List radgp_latent_predict(const arma::mat& cout,
                                      const arma::mat& coords, double rho,
                                      const arma::mat& theta_mcmc, 
                                      int M,
+                                     int covar,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
   
@@ -465,7 +468,7 @@ Rcpp::List radgp_latent_predict(const arma::mat& cout,
   arma::mat random_stdnormal = arma::randn(mcmc, ntest);
   arma::vec wtemp = arma::zeros(ntrain+ntest);
   
-  Rcpp::Rcout << "AptDAG-GP predicting (latent model)" << endl;
+  Rcpp::Rcout << "RadGP predicting (latent model)" << endl;
 #ifdef _OPENMP
 #pragma omp parallel for 
 #endif
@@ -482,10 +485,10 @@ Rcpp::List radgp_latent_predict(const arma::mat& cout,
       arma::uvec px = predict_dag(idagtarget);
       
       arma::mat CC = Correlationf(cxall, ix, ix, 
-                                  theta, bessel_ws, true);
-      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, false);
+                                  theta, bessel_ws, covar, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, covar, false);
       arma::mat PPi = 
-        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, true) );
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, covar, true) );
       
       arma::vec ht = PPi * CPt;
       double sqrtR = sqrt( arma::conv_to<double>::from(
@@ -513,6 +516,7 @@ arma::mat vecchiagp_latent_predict(const arma::mat& cout,
                                      const arma::mat& coords, 
                                      const arma::field<arma::uvec>& dag,
                                      const arma::mat& theta_mcmc, 
+                                     int covar,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
   
@@ -551,10 +555,10 @@ arma::mat vecchiagp_latent_predict(const arma::mat& cout,
       arma::uvec px = dag(itarget);
       
       arma::mat CC = Correlationf(cxall, ix, ix, 
-                                  theta, bessel_ws, true);
-      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, false);
+                                  theta, bessel_ws, covar, true);
+      arma::mat CPt = Correlationf(cxall, px, ix, theta, bessel_ws, covar, false);
       arma::mat PPi = 
-        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, true) );
+        arma::inv_sympd( Correlationf(cxall, px, px, theta, bessel_ws, covar, true) );
       
       arma::vec ht = PPi * CPt;
       double sqrtR = sqrt( arma::conv_to<double>::from(

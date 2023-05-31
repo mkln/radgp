@@ -26,7 +26,9 @@ nall <- nrow(coords_all)
 theta <- c(19.97, 1, 1.2, 0)
 nugget <- 1e-5
 
-CC <- radgp::Correlationc(coords_all, coords_all, theta, TRUE)
+system.time({CC <- radgp::Correlationc(coords_all, coords_all, theta, 0, TRUE)})
+
+
 LC <- t(chol(CC))
 wall <- LC %*% rnorm(nall) 
 yall <- wall + nugget^.5 * rnorm(nall)
@@ -88,7 +90,7 @@ system.time({
                                theta_prior=theta_unif_bounds,
                                nugg_start=nugget,
                                nugg_prior=c(.001, .001),
-                               mcmc=mcmc, n_threads=16, printn=10)
+                               mcmc=mcmc, n_threads=16, covariance = "pexp", printn=10)
 })
 
 
@@ -105,8 +107,8 @@ system.time({
                                 theta_prior=theta_unif_bounds,
                                 nugg_start=nugget,
                                 nugg_prior=c(.001, .001),
-                                mcmc=mcmc, n_threads=16, printn=20)
-})
+                                mcmc=mcmc, n_threads=16, covariance_model=1, printn=20)
+  })
 
 # posterior mean for theta
 radgp_latent$theta %>% apply(1, mean)

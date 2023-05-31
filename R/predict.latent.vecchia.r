@@ -15,6 +15,8 @@ predict.latent.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1, 
   }
   theta <- rbind(theta, rep(1e-8, ncol(theta)))
   
+  covar <- obj$covar
+  
   if(!independent){
     ixmm_pred <- GPvecchia::order_maxmin_exact_obs_pred(obj$coords, newcoords)$ord_pred
   
@@ -24,7 +26,7 @@ predict.latent.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1, 
     nn_dag <- apply(nn_dag_mat, 1, function(x){ x[!is.na(x)][-1]-1 })
     
     result <- vecchiagp_latent_predict(newcoords_mm, w, obj$coords, nn_dag,
-                                        theta, n_threads)
+                                        theta, covar, n_threads)
     
     wout <- result[order(ixmm_pred),]
     dag <- nn_dag
@@ -38,7 +40,7 @@ predict.latent.vecchia <- function(obj, newcoords, mcmc_keep=NULL, n_threads=1, 
     nn_dag <- c(obj$dag, pred_dag)
     
     result <- vecchiagp_latent_predict(newcoords, w, obj$coords, nn_dag,
-                                         theta, n_threads)
+                                         theta, covar, n_threads)
     
     wout <- result
     dag <- nn_dag

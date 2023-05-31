@@ -3,7 +3,9 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
                                    theta_prior=NULL, 
                                    nugg_start=NULL,
                                    nugg_prior=NULL, 
-                                   nugg_bounds=NULL, printn=10){
+                                   nugg_bounds=NULL, 
+                                   covariance_model="pexp",
+                                   printn=10){
   
   
   unif_bounds <- matrix(nrow=3, ncol=2)
@@ -43,10 +45,16 @@ response.model.vecchia <- function(y, coords, m, mcmc, n_threads,
   nn_dag_mat <- GPvecchia:::findOrderedNN_kdtree2(coords_mm, m)
   nn_dag <- apply(nn_dag_mat, 1, function(x){ x[!is.na(x)][-1]-1 })
   
+  if(covariance_model == "pexp"){ 
+    covar <- 0
+  } else {
+    covar <- 1
+  }
+  
   maxmin_time <- system.time({    
     response_model <- daggp_custom(y_mm, coords_mm, nn_dag, mcmc, n_threads,
                                       param_start, metrop_sd, unif_bounds, 
-                                      nugg_prior, printn) })
+                                      nugg_prior, covar, printn) })
   
   result <- c(response_model, list(
     dag=nn_dag,
