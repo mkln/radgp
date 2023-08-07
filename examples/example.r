@@ -6,16 +6,17 @@ library(radgp)
 
 ################################################################# data
 ###############################################################################
-ntrain <- 4000
-
 set.seed(10)
 
-dd <- 2
-coords_train <- runif(ntrain * dd) %>% matrix(ncol=dd)
+## training set
+ntrain <- 1600
+nl = 40
+ntrain = nl^2
+coords_train = as.matrix(expand.grid(xout<-seq(0,1,length.out=nl),xout))
 
 # test set 
-coords_test <- expand.grid(xout <- seq(0,1,length.out=10), 
-                           xout) %>% as.matrix()
+ntest = 1000
+coords_test <- matrix(runif(ntest*2),nrow=(ntest),ncol=2)
 ntest <- nrow(coords_test)
 
 coords_all <- rbind(coords_train, coords_test)
@@ -23,8 +24,8 @@ nall <- nrow(coords_all)
 
 # gen data from full GP
 # theta : phi, sigmasq, nu, nugg
-theta <- c(19.97, 1, 1.2, 0)
-nugget <- 1e-5
+theta <- c(31.62598, 1.00000, 1.50000, 0.00000)
+nugget <- 1e-3
 
 system.time({CC <- radgp::Correlationc(coords_all, coords_all, theta, 0, TRUE)})
 

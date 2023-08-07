@@ -24,7 +24,7 @@ predict.latent.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_thr
   
   result <- radgp_latent_predict(newcoords, w, 
                                       obj$coords, rho, 
-                                      theta, obj$M, covar, n_threads)
+                                      theta, covar, n_threads)
 
   nout <- nrow(result$wout)
   tau_mcmc <- matrix(1, nrow=nout, ncol=1) %*% matrix(nugg^.5, nrow=1, ncol=mcmc_keep)

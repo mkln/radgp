@@ -11,8 +11,8 @@ arma::umat make_candidates_testset(const arma::mat& w,
 arma::field<arma::uvec> neighbor_search_testset(const arma::mat& wtrain, 
                                                 const arma::mat& wtest, double rho);
 arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& Rset, 
-                                                 int ntrain,
-                                                 int Mmin);
+                                                 const arma::mat& wtrain, 
+                                                 const arma::mat& wtest);
 arma::field<arma::uvec> altdagbuild_testset(const arma::mat& wtrain,
                                             const arma::mat& wtest, 
                                             double rho,

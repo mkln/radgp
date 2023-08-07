@@ -17,8 +17,12 @@ neighbor_search <- function(w, rho) {
     .Call(`_radgp_neighbor_search`, w, rho)
 }
 
-dagbuild_from_nn <- function(Rset, layers, M, w, rho) {
-    .Call(`_radgp_dagbuild_from_nn`, Rset, layers, M, w, rho)
+dagbuild_from_nn <- function(Rset, w) {
+    .Call(`_radgp_dagbuild_from_nn`, Rset, w)
+}
+
+radialndag <- function(w, rho) {
+    .Call(`_radgp_radialndag`, w, rho)
 }
 
 radial_neighbors_dag <- function(w, rho) {
@@ -33,24 +37,24 @@ neighbor_search_testset <- function(wtrain, wtest, rho) {
     .Call(`_radgp_neighbor_search_testset`, wtrain, wtest, rho)
 }
 
-dagbuild_from_nn_testset <- function(Rset, ntrain, layers, Mmin, wtrain, wtest) {
-    .Call(`_radgp_dagbuild_from_nn_testset`, Rset, ntrain, layers, Mmin, wtrain, wtest)
+radgpbuild_testset <- function(wtrain, wtest, rho) {
+    .Call(`_radgp_radgpbuild_testset`, wtrain, wtest, rho)
 }
 
-radial_neighbors_dag_testset <- function(wtrain, wtest, rho, M) {
-    .Call(`_radgp_radial_neighbors_dag_testset`, wtrain, wtest, rho, M)
+radial_neighbors_dag_testset <- function(wtrain, wtest, rho) {
+    .Call(`_radgp_radial_neighbors_dag_testset`, wtrain, wtest, rho)
 }
 
-radgp_response_predict <- function(cout, y, coords, rho, theta_mcmc, M, covar, num_threads) {
-    .Call(`_radgp_radgp_response_predict`, cout, y, coords, rho, theta_mcmc, M, covar, num_threads)
+radgp_response_predict <- function(cout, y, coords, rho, theta_mcmc, covar, num_threads) {
+    .Call(`_radgp_radgp_response_predict`, cout, y, coords, rho, theta_mcmc, covar, num_threads)
 }
 
 vecchiagp_response_predict <- function(cout, y, coords, dag, theta_mcmc, covar, num_threads) {
     .Call(`_radgp_vecchiagp_response_predict`, cout, y, coords, dag, theta_mcmc, covar, num_threads)
 }
 
-radgp_latent_predict <- function(cout, w, coords, rho, theta_mcmc, M, covar, num_threads) {
-    .Call(`_radgp_radgp_latent_predict`, cout, w, coords, rho, theta_mcmc, M, covar, num_threads)
+radgp_latent_predict <- function(cout, w, coords, rho, theta_mcmc, covar, num_threads) {
+    .Call(`_radgp_radgp_latent_predict`, cout, w, coords, rho, theta_mcmc, covar, num_threads)
 }
 
 vecchiagp_latent_predict <- function(cout, w, coords, dag, theta_mcmc, covar, num_threads) {

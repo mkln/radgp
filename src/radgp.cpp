@@ -14,7 +14,7 @@ DagGP::DagGP(
   rho = rho_in;
   
   layers = arma::zeros<arma::uvec>(nr);
-  dag = radialndag(coords, rho, layers, M);
+  dag = radialndag(coords, rho);
   oneuv = arma::ones<arma::uvec>(1);
   
   model_type = model; // response or latent

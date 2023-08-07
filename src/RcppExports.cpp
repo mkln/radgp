@@ -67,17 +67,26 @@ BEGIN_RCPP
 END_RCPP
 }
 // dagbuild_from_nn
-arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, arma::uvec& layers, int& M, const arma::mat& w, double rho);
-RcppExport SEXP _radgp_dagbuild_from_nn(SEXP RsetSEXP, SEXP layersSEXP, SEXP MSEXP, SEXP wSEXP, SEXP rhoSEXP) {
+arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, const arma::mat& w);
+RcppExport SEXP _radgp_dagbuild_from_nn(SEXP RsetSEXP, SEXP wSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::field<arma::uvec>& >::type Rset(RsetSEXP);
-    Rcpp::traits::input_parameter< arma::uvec& >::type layers(layersSEXP);
-    Rcpp::traits::input_parameter< int& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type w(wSEXP);
+    rcpp_result_gen = Rcpp::wrap(dagbuild_from_nn(Rset, w));
+    return rcpp_result_gen;
+END_RCPP
+}
+// radialndag
+arma::field<arma::uvec> radialndag(const arma::mat& w, double rho);
+RcppExport SEXP _radgp_radialndag(SEXP wSEXP, SEXP rhoSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type w(wSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    rcpp_result_gen = Rcpp::wrap(dagbuild_from_nn(Rset, layers, M, w, rho));
+    rcpp_result_gen = Rcpp::wrap(radialndag(w, rho));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -118,39 +127,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// dagbuild_from_nn_testset
-arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& Rset, int ntrain, arma::uvec& layers, int Mmin, const arma::mat& wtrain, const arma::mat& wtest);
-RcppExport SEXP _radgp_dagbuild_from_nn_testset(SEXP RsetSEXP, SEXP ntrainSEXP, SEXP layersSEXP, SEXP MminSEXP, SEXP wtrainSEXP, SEXP wtestSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::field<arma::uvec>& >::type Rset(RsetSEXP);
-    Rcpp::traits::input_parameter< int >::type ntrain(ntrainSEXP);
-    Rcpp::traits::input_parameter< arma::uvec& >::type layers(layersSEXP);
-    Rcpp::traits::input_parameter< int >::type Mmin(MminSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type wtrain(wtrainSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type wtest(wtestSEXP);
-    rcpp_result_gen = Rcpp::wrap(dagbuild_from_nn_testset(Rset, ntrain, layers, Mmin, wtrain, wtest));
-    return rcpp_result_gen;
-END_RCPP
-}
-// radial_neighbors_dag_testset
-Rcpp::List radial_neighbors_dag_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M);
-RcppExport SEXP _radgp_radial_neighbors_dag_testset(SEXP wtrainSEXP, SEXP wtestSEXP, SEXP rhoSEXP, SEXP MSEXP) {
+// radgpbuild_testset
+arma::field<arma::uvec> radgpbuild_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho);
+RcppExport SEXP _radgp_radgpbuild_testset(SEXP wtrainSEXP, SEXP wtestSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type wtrain(wtrainSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type wtest(wtestSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    Rcpp::traits::input_parameter< int >::type M(MSEXP);
-    rcpp_result_gen = Rcpp::wrap(radial_neighbors_dag_testset(wtrain, wtest, rho, M));
+    rcpp_result_gen = Rcpp::wrap(radgpbuild_testset(wtrain, wtest, rho));
+    return rcpp_result_gen;
+END_RCPP
+}
+// radial_neighbors_dag_testset
+Rcpp::List radial_neighbors_dag_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho);
+RcppExport SEXP _radgp_radial_neighbors_dag_testset(SEXP wtrainSEXP, SEXP wtestSEXP, SEXP rhoSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type wtrain(wtrainSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type wtest(wtestSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    rcpp_result_gen = Rcpp::wrap(radial_neighbors_dag_testset(wtrain, wtest, rho));
     return rcpp_result_gen;
 END_RCPP
 }
 // radgp_response_predict
-Rcpp::List radgp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int covar, int num_threads);
-RcppExport SEXP _radgp_radgp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP covarSEXP, SEXP num_threadsSEXP) {
+Rcpp::List radgp_response_predict(const arma::mat& cout, const arma::vec& y, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int covar, int num_threads);
+RcppExport SEXP _radgp_radgp_response_predict(SEXP coutSEXP, SEXP ySEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP covarSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -159,10 +164,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type coords(coordsSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_mcmc(theta_mcmcSEXP);
-    Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type covar(covarSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(radgp_response_predict(cout, y, coords, rho, theta_mcmc, M, covar, num_threads));
+    rcpp_result_gen = Rcpp::wrap(radgp_response_predict(cout, y, coords, rho, theta_mcmc, covar, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -184,8 +188,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // radgp_latent_predict
-Rcpp::List radgp_latent_predict(const arma::mat& cout, const arma::mat& w, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int M, int covar, int num_threads);
-RcppExport SEXP _radgp_radgp_latent_predict(SEXP coutSEXP, SEXP wSEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP MSEXP, SEXP covarSEXP, SEXP num_threadsSEXP) {
+Rcpp::List radgp_latent_predict(const arma::mat& cout, const arma::mat& w, const arma::mat& coords, double rho, const arma::mat& theta_mcmc, int covar, int num_threads);
+RcppExport SEXP _radgp_radgp_latent_predict(SEXP coutSEXP, SEXP wSEXP, SEXP coordsSEXP, SEXP rhoSEXP, SEXP theta_mcmcSEXP, SEXP covarSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -194,10 +198,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type coords(coordsSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type theta_mcmc(theta_mcmcSEXP);
-    Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type covar(covarSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(radgp_latent_predict(cout, w, coords, rho, theta_mcmc, M, covar, num_threads));
+    rcpp_result_gen = Rcpp::wrap(radgp_latent_predict(cout, w, coords, rho, theta_mcmc, covar, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -383,15 +386,16 @@ static const R_CallMethodDef CallEntries[] = {
     {"_radgp_gpkernel", (DL_FUNC) &_radgp_gpkernel, 3},
     {"_radgp_make_candidates", (DL_FUNC) &_radgp_make_candidates, 4},
     {"_radgp_neighbor_search", (DL_FUNC) &_radgp_neighbor_search, 2},
-    {"_radgp_dagbuild_from_nn", (DL_FUNC) &_radgp_dagbuild_from_nn, 5},
+    {"_radgp_dagbuild_from_nn", (DL_FUNC) &_radgp_dagbuild_from_nn, 2},
+    {"_radgp_radialndag", (DL_FUNC) &_radgp_radialndag, 2},
     {"_radgp_radial_neighbors_dag", (DL_FUNC) &_radgp_radial_neighbors_dag, 2},
     {"_radgp_sparse_struct", (DL_FUNC) &_radgp_sparse_struct, 2},
     {"_radgp_neighbor_search_testset", (DL_FUNC) &_radgp_neighbor_search_testset, 3},
-    {"_radgp_dagbuild_from_nn_testset", (DL_FUNC) &_radgp_dagbuild_from_nn_testset, 6},
-    {"_radgp_radial_neighbors_dag_testset", (DL_FUNC) &_radgp_radial_neighbors_dag_testset, 4},
-    {"_radgp_radgp_response_predict", (DL_FUNC) &_radgp_radgp_response_predict, 8},
+    {"_radgp_radgpbuild_testset", (DL_FUNC) &_radgp_radgpbuild_testset, 3},
+    {"_radgp_radial_neighbors_dag_testset", (DL_FUNC) &_radgp_radial_neighbors_dag_testset, 3},
+    {"_radgp_radgp_response_predict", (DL_FUNC) &_radgp_radgp_response_predict, 7},
     {"_radgp_vecchiagp_response_predict", (DL_FUNC) &_radgp_vecchiagp_response_predict, 7},
-    {"_radgp_radgp_latent_predict", (DL_FUNC) &_radgp_radgp_latent_predict, 8},
+    {"_radgp_radgp_latent_predict", (DL_FUNC) &_radgp_radgp_latent_predict, 7},
     {"_radgp_vecchiagp_latent_predict", (DL_FUNC) &_radgp_vecchiagp_latent_predict, 7},
     {"_radgp_hmat_from_dag", (DL_FUNC) &_radgp_hmat_from_dag, 4},
     {"_radgp_pred_from_dag", (DL_FUNC) &_radgp_pred_from_dag, 5},

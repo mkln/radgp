@@ -4,8 +4,9 @@ library(Matrix)
 library(radgp)
 library(ggplot2)
 library(gridExtra)
-library(RcppHungarian)
 library(MASS)
+library(dplyr)
+library(cowplot)
 
 Chol_dag <- function(cov, dag){
   n = nrow(cov)
@@ -26,11 +27,6 @@ Chol_dag <- function(cov, dag){
   return(list(I-B, Dvec))
 }
 
-# Chol_true <- function(cov, ord){
-#   
-# }
-
-
 cov_dag <- function(cov, dag){
   n = nrow(cov)
   I = diag(rep(1,n))
@@ -39,7 +35,6 @@ cov_dag <- function(cov, dag){
   adjL = matrix(0,nrow=n,ncol=n)
   for (i in 1:n){
     ni = dag[[i]]
-    adjL[i,i] = 1
     if (length(ni)>0){
       cov_ni_inv = solve(cov[ni,ni])
       adjL[ni,i] = 1
@@ -109,20 +104,11 @@ cov_mat <- function(coords, kernel){
   return(C)
 }
 
-spin_sort <- function(coords, corners){
+spin_sort <- function(coords){
   n = nrow(coords)
-  n_corners = nrow(corners)
-  d_2_corners = matrix(0, nrow = n, ncol = n_corners)
-  for (i in 1:n_corners){
-    d_2_corners[,i] = rowSums((coords - matrix(1, nrow=n, ncol=1) %*% corners[i,])^2)
-  }
-  ds = vector('numeric',n)
-  for (j in 1:n){
-    ds[j] = max(d_2_corners[j,])
-  }
-  coords_init = coords[which.min(ds),]
-  d_2_init = rowSums((coords - matrix(1, nrow=n, ncol=1) %*% coords_init)^2)
-  sorted_ind = sort(d_2_init,index.return=TRUE)$ix
+  center = colMeans(coords)
+  ds = rowSums((coords - matrix(1, nrow=n, ncol=1) %*% matrix(center,nrow=1))^2)
+  sorted_ind = sort(ds,index.return=TRUE)$ix
 }
 
 
@@ -130,8 +116,11 @@ spin_sort <- function(coords, corners){
 nl = 40
 ntrain = nl^2
 coords_train = as.matrix(expand.grid(xout<-seq(0,1,length.out=nl),xout))
+a = 1/(nl-1)
+# print('minimal distance values on grid')
+# print(c(a, sqrt(2)*a, 2*a, sqrt(5)*a, sqrt(8)*a, 3*a))
 
-# ## uniform training data
+# uniform training data
 # ntrain = 1600
 # coords_train = matrix(runif(ntrain*2),nrow=(ntrain),ncol=2)
 
@@ -142,11 +131,11 @@ coords_test = matrix(runif(ntest*2),nrow=(ntest),ncol=2)
 coords_all = rbind(coords_train, coords_test)
 
 ## Gaussian covariance function
-# phi = - log(0.05)/0.15^2
-# expfun <- function(x,phi=133.14){
-#   return(exp(-phi*x^2))
-# }
-# CC_train = cov_mat(coords_train, expfun)
+phi = - log(0.05)/0.15^2
+expfun <- function(x,phi=133.14){
+  return(exp(-phi*x^2))
+}
+CC_train = cov_mat(coords_train, expfun)
 
 ## Matern covariance function
 theta <- c(20, 1, 3/2, 0)
@@ -154,16 +143,14 @@ matern_hint_fun <- function(phi, dist=0.15, sigmasq=1, thre=0.05){
   return( thre - sigmasq*(1+phi*dist) * exp(-phi*dist) )
 }
 theta[1] = dichotomy_solver(matern_hint_fun, 10, 50)
-nugget <- 1e-5
+nugget <- 0.01
 CC <- radgp::Correlationc(coords_all, coords_all, theta, 0, T)
 CC_train <- CC[1:ntrain,1:ntrain]
 
-# rho_lst = c(0.05, 0.1, 0.15, 0.175, 0.2, 0.225, 0.25, 0.5, 1)
-# m_lst = c(3, 5, 10, 20, 40, 80, 130, 200)
-rho_lst = c(0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15)
-m_lst = c(3, 5, 7, 10, 13, 16, 20, 25, 30, 36, 43, 50)
-# rho_lst = c(0.05, 0.07, 0.09, 0.10, 0.11)
-# m_lst = c(2, 4, 6, 8, 10, 12, 14, 17)
+
+rho_lst = c(0.055, 0.065, 0.075, 0.085, 0.095, 0.105, 0.115, 0.125, 0.14, 0.155, 0.17)
+m_lst = c(5, 7, 9, 12, 15, 18, 22, 26, 30, 35, 40)
+
 
 
 ## nngp
@@ -179,65 +166,70 @@ for (j in 1:length(m_lst)){
     dag_nn[[ixmm[i]]] = ixmm[neighbor_mat[!is.na(neighbor_mat)][-1]]
   }
   CC_train_nn_obj = cov_dag(CC_train, dag_nn)
-  W22_mat[j,] = c(mean_neighbors(dag_nn), W22(CC_train, CC_train_nn_obj[[1]]))
+  # W22_mat[j,] = c(mean_neighbors(dag_nn), W22(CC_train, CC_train_nn_obj[[1]]))
+  W22_mat[j,] = c(CC_train_nn_obj[[2]], W22(CC_train, CC_train_nn_obj[[1]]))
   print(paste('nngp: ', j,'th finished'))
 }
 W22_dat = as.data.frame(W22_mat)
-colnames(W22_dat) = c('ave.neighbors', 'W22')
-W22_dat$method = 'nngp'
+colnames(W22_dat) = c('Ave.Nonzeros', 'W22')
+W22_dat$Method = 'NNGP'
 
 ## radgp new 
 W22_mat = matrix(0,nrow=length(rho_lst),ncol=2)
-corners = matrix(c(0,0,1,0,0,1,1,1),nrow=4,ncol=2)
-sorted_ind = spin_sort(coords_train, corners)
+sorted_ind = spin_sort(coords_train)
 sorted_order = vector('numeric',ntrain)
-for (i in 1:n){
+for (i in 1:ntrain){
   sorted_order[sorted_ind[i]] = i
 }
 for (j in 1:length(rho_lst)){
   rho = rho_lst[j]
-  Rsets = neighbor_search(coords_train, rho)
-  Nsets = vector('list',ntrain)
+  Nsets = radialndag(coords_train, rho)
   for (i in 1:ntrain){
-    candidates = Rsets[[i]] + 1   ## C++ starts from 0 while R starts from 1
-    Nsets[[i]] = candidates[which(sorted_order[candidates] < sorted_order[i])]
+    Nsets[[i]] = Nsets[[i]] + 1
   }
-  ## add a single closest location when there is no parents
-  for (i in 2:ntrain){
-    i_origin = sorted_ind[i]
-    if (length(Nsets[[i_origin]]) == 0){
-      coords_now = coords_train[i_origin,]
-      inds_b = sorted_ind[1:(i-1)]
-      ds = rowSums((coords_train[inds_b,] - matrix(1,nrow=length(inds_b),ncol=1) %*% coords_now)^2)
-      Nsets[[i_origin]] = inds_b[which.min(ds)]
-    }
-  }
-  CC_train_spin = cov_dag(CC_train, Nsets)[[1]] 
-  W22_mat[j,] = c(mean_neighbors(Nsets), W22(CC_train, CC_train_spin))
+  # Rsets = neighbor_search(coords_train, rho)
+  # Nsets = vector('list',ntrain)
+  # for (i in 1:ntrain){
+  #   candidates = Rsets[[i]] + 1   ## C++ starts from 0 while R starts from 1
+  #   Nsets[[i]] = candidates[which(sorted_order[candidates] < sorted_order[i])]
+  # }
+  # ## add a single closest location when there is no parents
+  # for (i in 2:ntrain){
+  #   i_origin = sorted_ind[i]
+  #   if (length(Nsets[[i_origin]]) == 0){
+  #     coords_now = coords_train[i_origin,]
+  #     inds_b = sorted_ind[1:(i-1)]
+  #     ds = rowSums((coords_train[inds_b,] - matrix(1,nrow=length(inds_b),ncol=1) %*% coords_now)^2)
+  #     Nsets[[i_origin]] = inds_b[which.min(ds)]
+  #   }
+  # }
+  CC_train_spin_obj = cov_dag(CC_train, Nsets) 
+  W22_mat[j,] = c(CC_train_spin_obj[[2]], W22(CC_train, CC_train_spin_obj[[1]]))
   print(paste('radgp_new: ', j,'th finished'))
 }
 W22_dat_new = as.data.frame(W22_mat)
-colnames(W22_dat_new) = c('ave.neighbors', 'W22')
-W22_dat_new$method = 'radgp_new'
+colnames(W22_dat_new) = c('Ave.Nonzeros', 'W22')
+W22_dat_new$Method = 'RadGP'
 W22_dat = rbind(W22_dat, W22_dat_new)
 
+
 ## radgp old
-W22_mat = matrix(0,nrow=length(rho_lst),ncol=2)
-for (j in 1:length(rho_lst)){
-  rho = rho_lst[j]
-  dag_rad <- radial_neighbors_dag(coords_train, rho)
-  for (i in 2:ntrain){
-    dag_rad$dag[[i]] = dag_rad$dag[[i]] + 1  ## C++ starts from 0 while R starts from 1
-  }
-  CC_train_rad_obj = cov_dag(CC_train, dag_rad$dag)
-  # W22_mat[j,] = c(CC_train_rad_obj[[2]], W22(CC_train, CC_train_rad_obj[[1]]))
-  W22_mat[j,] = c(mean_neighbors(dag_rad$dag), W22(CC_train, CC_train_rad_obj[[1]]))
-  print(paste('radgp_old: ', j,'th finished'))
-}
-W22_dat_new = as.data.frame(W22_mat)
-colnames(W22_dat_new) = c('ave.neighbors', 'W22')
-W22_dat_new$method = 'radgp_old'
-W22_dat = rbind(W22_dat, W22_dat_new)
+# W22_mat = matrix(0,nrow=length(rho_lst),ncol=2)
+# for (j in 1:length(rho_lst)){
+#   rho = rho_lst[j]
+#   dag_rad <- radial_neighbors_dag(coords_train, rho)
+#   for (i in 2:ntrain){
+#     dag_rad$dag[[i]] = dag_rad$dag[[i]] + 1  ## C++ starts from 0 while R starts from 1
+#   }
+#   CC_train_rad_obj = cov_dag(CC_train, dag_rad$dag)
+#   # W22_mat[j,] = c(CC_train_rad_obj[[2]], W22(CC_train, CC_train_rad_obj[[1]]))
+#   W22_mat[j,] = c(mean_neighbors(dag_rad$dag), W22(CC_train, CC_train_rad_obj[[1]]))
+#   print(paste('radgp_old: ', j,'th finished'))
+# }
+# W22_dat_new = as.data.frame(W22_mat)
+# colnames(W22_dat_new) = c('Ave.Nonzeros', 'W22')
+# W22_dat_new$method = 'radgp_old'
+# W22_dat = rbind(W22_dat, W22_dat_new)
 
 
 
@@ -245,21 +237,23 @@ W22_dat = rbind(W22_dat, W22_dat_new)
 
 
 ## plot results
-ggplot(W22_dat) +
-  geom_line(aes(x=ave.neighbors,y=W22,color=method))
+p1 = ggplot(W22_dat) +
+  geom_line(aes(x=Ave.Nonzeros,y=W22,color=Method),size=1.5) +
+  theme_minimal(base_size = 25) + theme(legend.position='none')
+W22_dat_m = W22_dat
+W22_dat_m$logW22 = log(W22_dat_m$W22)
+p2 = ggplot(W22_dat_m) +
+  geom_line(aes(x=Ave.Nonzeros,y=logW22,color=Method),size=1.5) +
+  theme_minimal(base_size = 25)
+plot_grid(p1, p2, align='h', nrow=1, rel_widths=c(0.45,0.55))
 
 
-# ## plot log results
-# W22_dat_m = W22_dat[-which(W22_dat$ave.neighbors<5),]
-# W22_dat_m$logW22 = log(W22_dat_m$W22)
-# ggplot(W22_dat_m) +
-#   geom_line(aes(x=ave.neighbors,y=logW22,color=method))
 
 
 
 
 
-## codes to investigate same ave.neighbors behaviors
+## codes to investigate same Ave.Nonzeros behaviors
 # preci_train = ginv(CC_train)
 # 
 # rho_com = 0.07

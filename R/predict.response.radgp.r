@@ -20,7 +20,7 @@ predict.response.radgp <- function(obj, newcoords, rho=NULL, mcmc_keep=NULL, n_t
   
   result <- radgp_response_predict(newcoords, obj$y, 
                                       obj$coords, rho, 
-                                      param, obj$M, covar, n_threads)
+                                      param, covar, n_threads)
   
   return(result)
 }

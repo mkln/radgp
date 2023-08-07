@@ -67,230 +67,68 @@ arma::field<arma::uvec> neighbor_search_testset(const arma::mat& wtrain,
   return Nset;
 }
 
-//[[Rcpp::export]]
+arma::uvec sort_test(const arma::mat wtrain, const arma::mat wtest){
+  int ntrain = wtrain.n_rows;
+  int ntest = wtest.n_rows;
+  arma::rowvec center = arma::mean(wtrain);
+  arma::mat diffs_test = wtest - arma::ones<arma::colvec>(ntest) * center;
+  arma::colvec c_dist2_test(ntest);
+  for(int i=0; i<ntest; i++){
+    c_dist2_test(i) = arma::dot(diffs_test.row(i),diffs_test.row(i));
+  }
+  arma::uvec sorted_id = arma::sort_index(c_dist2_test);
+  return sorted_id;
+}
+
 arma::field<arma::uvec> dagbuild_from_nn_testset(const arma::field<arma::uvec>& Rset, 
-                                                 int ntrain, arma::uvec& layers,
-                                                 int Mmin, const arma::mat& wtrain, const arma::mat& wtest){
-  int ntest = Rset.n_elem;
-  int nr = ntrain + ntest;
-  int M = Mmin;
+                                                 const arma::mat& wtrain, const arma::mat& wtest){
+  int ntrain = wtrain.n_rows;
+  int ntest = wtest.n_rows;
+  int nall = ntrain + ntest;
+  arma::mat wall = arma::join_cols(wtrain, wtest);
   
-  layers = arma::zeros<arma::uvec>(nr);
-  arma::field<arma::uvec> R_layers(nr);
-  
-  std::deque<int> queue;
-  arma::uvec oneuv = arma::ones<arma::uvec>(1);
-  
-  for(int i=ntrain; i<nr; i++){
-    if(!(layers(i) == 0)){
-      continue;
-    } else {
-      int l = i;
-      for(int k=Mmin; k<M+2; k++){
-        arma::uvec found_elem = arma::find(R_layers(l) == k);
-        if(found_elem.n_elem == 0){ 
-          layers(l) = k;
-          break;
-        }
-      }
-      M = layers(l) > M ? layers(l) : M;
-      for(int jx=0; jx < Rset(l-ntrain).n_elem; jx++){
-        int j = Rset(l-ntrain)(jx);
-        if(j > ntrain){
-          R_layers(j) = arma::join_vert(R_layers(j), oneuv*layers(l));
-          if(layers(j) == 0){
-            queue.push_back(j); 
-          }
-        }
-      } 
-      
-      while(queue.size()>0){
-        l = queue.front();
-        queue.pop_front();
-        if(layers(l) > 0){
-          continue;
-        }
-        for(int k=Mmin; k<M+2; k++){
-          arma::uvec found_elem = arma::find(R_layers(l) == k);
-          if(found_elem.n_elem == 0){ //**
-            layers(l) = k;
-            break;
-          }
-        }
-        M = layers(l) > M ? layers(l) : M;
-        for(int jx=0; jx<Rset(l-ntrain).n_elem; jx++){
-          int j = Rset(l-ntrain)(jx);
-          if(j > ntrain){
-            R_layers(j) = arma::join_vert(R_layers(j), oneuv*layers(l));
-            if(layers(j) == 0){
-              queue.push_back(j); 
-            }
-          }
-        } 
-      }
-    }
+  arma::uvec sorted_id = sort_test(wtrain, wtest);
+  arma::uvec v1ntrain = arma::linspace<arma::uvec>(0,ntrain-1,ntrain);
+  arma::uvec sorted_id_all = arma::join_cols(v1ntrain, sorted_id+ntrain);
+  arma::uvec sorted_order_all(nall);
+  for(int i=0; i<nall; i++){
+    sorted_order_all(sorted_id_all(i)) = i;
   }
   arma::field<arma::uvec> Nset(ntest);
   for(int i=0; i<ntest; i++){
-    arma::uvec layers_ne(Rset(i).n_elem);
-    for(int jx=0; jx<Rset(i).n_elem; jx++){
-      int x = Rset(i)(jx);
-      layers_ne(jx) = layers(x);
-    }
-    Nset(i) = Rset(i)(arma::find(layers_ne<layers(i+ntrain)));
+    Nset(i) = Rset(i)(arma::find(sorted_order_all(Rset(i))<sorted_order_all(i+ntrain)));
   }
-
-  // add training parents for testing locations with no parents
-  arma::uvec indsort0 = arma::sort_index(wtrain.col(0));
-  for (int ni=1; ni<ntest; ni++){
-    if (Nset(ni).n_elem == 0){
-
-      // first pass: get closest training parent
-      int left=0;
-      int right=ntrain-1;
-      int mid=(int)round((left+right)/2);
-      while(right-left>1){
-        if (wtrain(indsort0(mid),0)<=wtest(ni,0)){
-          left = mid;
-          mid=(int)round((left+right)/2);
-        } else {
-          right= mid;
-          mid=(int)round((left+right)/2);
-        }
+  for(int i=0; i<ntest; i++){
+    if(Nset(sorted_id(i)).n_elem == 0){
+      arma::uvec inds_b = sorted_id_all.subvec(0,i+ntrain-1);
+      arma::mat diffs_b = wall.rows(inds_b) - arma::ones<arma::colvec>(i+ntrain) * wtest.row(sorted_id(i));
+      arma::colvec c_dist2_b(i+ntrain);
+      for(int j=0; j<i; j++){
+        c_dist2_b(j) = arma::dot(diffs_b.row(j),diffs_b.row(j));
       }
-      int left0 = left;
-      int right0 = right;
-      arma::rowvec rdiff = wtest.row(ni) - wtrain.row(indsort0(left));
-      double rdist = sqrt(arma::accu(rdiff % rdiff));
-      int s0 = left;
-      double dist0 = rdist;
-      rdiff = wtest.row(ni) - wtrain.row(indsort0(right));
-      rdist = sqrt(arma::accu(rdiff % rdiff));
-      if (rdist < dist0){
-        s0 = right;
-        dist0 = rdist;
-      }
-      double adist_l = wtest(ni,0) - wtrain(indsort0(left),0);
-      double adist_r = wtrain(indsort0(right),0) - wtest(ni,0);
-      double adist = std::min(adist_l, adist_r);
-      while (adist < dist0){
-        if (adist_l < adist_r){
-          if (left==0){
-            adist_l = dist0*2;
-          } else{
-            left--;
-            arma::rowvec rdiff = wtest.row(ni) - wtrain.row(indsort0(left));
-            double rdist = sqrt(arma::accu(rdiff % rdiff));
-            if (rdist < dist0){
-              s0 = left;
-              dist0 = rdist;
-            }
-            adist_l = wtest(ni,0) - wtrain(indsort0(left),0);
-          }
-        } else{
-          if (right==ntrain-1){
-            adist_r = dist0*2;
-          } else{
-            right++;
-            arma::rowvec rdiff = wtest.row(ni) - wtrain.row(indsort0(right));
-            double rdist = sqrt(arma::accu(rdiff % rdiff));
-            if (rdist < dist0){
-              s0 = right;
-              dist0 = rdist;
-            }
-            adist_r = wtrain(indsort0(right),0) - wtest(ni,0);            
-          }
-        }
-        adist = std::min(adist_l, adist_r);
-      }
-
-      // second pass: get closest training location suject to angle constraints 
-      double cos_thre = sqrt(2)/2;
-      arma::rowvec nv = (wtrain.row(indsort0(s0)) - wtest.row(ni)) / dist0;
-      left = left0;
-      right = right0;
-      double dist1 = std::numeric_limits<double>::infinity();
-      int s1 = -1;
-      rdiff = wtrain.row(indsort0(left)) - wtest.row(ni);
-      rdist = sqrt(arma::accu(rdiff % rdiff));
-      if (arma::accu(rdiff % nv) < rdist*cos_thre and rdist < dist1){
-        s1 = left;
-        dist1 = rdist;       
-      }
-      rdiff = wtrain.row(indsort0(right)) - wtest.row(ni);
-      rdist = sqrt(arma::accu(rdiff % rdiff));
-      if (arma::accu(rdiff % nv) < rdist*cos_thre and rdist < dist1){
-        s1 = right;
-        dist1 = rdist;       
-      }
-      adist_l = wtest(ni,0) - wtrain(indsort0(left),0);
-      adist_r = wtrain(indsort0(right),0) - wtest(ni,0);
-      adist = std::min(adist_l, adist_r);
-      while (adist < dist1){
-        if (adist_l < adist_r){
-          if (left==0){
-            adist_l = dist1*2;
-          } else{
-            left--;
-            arma::rowvec rdiff = wtrain.row(indsort0(left)) - wtest.row(ni);
-            rdist = sqrt(arma::accu(rdiff % rdiff));
-            if (arma::accu(rdiff % nv) < rdist*cos_thre and rdist < dist1){
-              s1 = left;
-              dist1 = rdist;
-            }
-            adist_l = wtest(ni,0) - wtrain(indsort0(left),0);
-          }
-        } else{
-          if (right==ntrain-1){
-            adist_r = dist1*2;
-          } else{
-            right++;
-            arma::rowvec rdiff = wtrain.row(indsort0(right)) - wtest.row(ni);
-            rdist = sqrt(arma::accu(rdiff % rdiff));
-            if (arma::accu(rdiff % nv) < rdist*cos_thre and rdist < dist1){
-              s1 = right;
-              dist1 = rdist;  
-            }
-            adist_r = wtrain(indsort0(right),0) - wtest(ni,0);            
-          }
-        }
-        adist = std::min(adist_l, adist_r);
-      }
-
-      // add elements to parent set
-      if (s1 == -1){
-        Nset(ni) = arma::uvec(1,arma::fill::value(indsort0(s0)));
-      } else{
-        std::vector<int> addset = {indsort0(s0), indsort0(s1)};
-        Nset(ni) = arma::conv_to<arma::uvec>::from(addset);
-      }
+      Nset(i) = c_dist2_b.index_min();
     }
   }
-  
   return Nset;
 }
 
+//[[Rcpp::export]]
 arma::field<arma::uvec> radgpbuild_testset(const arma::mat& wtrain,
-                                            const arma::mat& wtest, 
-                                            double rho,
-                                            arma::uvec& layers, int M){
+                                           const arma::mat& wtest, 
+                                           double rho){
   arma::field<arma::uvec> Rset = neighbor_search_testset(wtrain, wtest, rho);
-  int ntrain = wtrain.n_rows;
-  arma::field<arma::uvec> dag = dagbuild_from_nn_testset(Rset, ntrain, layers, M, wtrain, wtest);
+  arma::field<arma::uvec> dag = dagbuild_from_nn_testset(Rset, wtrain, wtest);
   return dag;
 }
 
 
 //[[Rcpp::export]]
-Rcpp::List radial_neighbors_dag_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho, int M){
-  arma::field<arma::uvec> Rset = neighbor_search_testset(wtrain, wtest, rho);
-  int ntrain = wtrain.n_rows;
-  arma::uvec layers;
-  arma::field<arma::uvec> dag = dagbuild_from_nn_testset(Rset, ntrain, layers, M, wtrain, wtest);
+Rcpp::List radial_neighbors_dag_testset(const arma::mat& wtrain, const arma::mat& wtest, double rho){
+  arma::field<arma::uvec> dag = radgpbuild_testset(wtrain, wtest, rho);
+  arma::uvec sorted_id = sort_test(wtrain, wtest);
   return Rcpp::List::create(
     Rcpp::Named("dag") = dag,
-    Rcpp::Named("layers") = layers,
-    Rcpp::Named("M") = M
+    Rcpp::Named("sorted_id") = sorted_id
   );
 }
 
@@ -299,7 +137,6 @@ Rcpp::List radgp_response_predict(const arma::mat& cout,
                                      const arma::vec& y, 
                                      const arma::mat& coords, double rho,
                                      const arma::mat& theta_mcmc, 
-                                     int M,
                                      int covar,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
@@ -320,8 +157,8 @@ Rcpp::List radgp_response_predict(const arma::mat& cout,
   
   arma::uvec layers;
   arma::field<arma::uvec> predict_dag = 
-    radgpbuild_testset(coords, cout, rho, layers, M);
-  arma::uvec pred_order = arma::sort_index(layers);
+    radgpbuild_testset(coords, cout, rho);
+  arma::uvec pred_order = sort_test(coords, cout);
   
   arma::mat yout_mcmc = arma::zeros(ntest, mcmc);
   arma::mat random_stdnormal = arma::randn(mcmc, ntest);
@@ -337,7 +174,7 @@ Rcpp::List radgp_response_predict(const arma::mat& cout,
     ytemp.subvec(0, ntrain-1) = y;
     for(int i=0; i<ntest; i++){
       
-      int itarget = pred_order(ntrain+i);
+      int itarget = pred_order(i) + ntrain;
       int idagtarget = itarget - ntrain;
       
       arma::uvec ix = oneuv * (itarget);
@@ -364,7 +201,6 @@ Rcpp::List radgp_response_predict(const arma::mat& cout,
   return Rcpp::List::create(
     Rcpp::Named("yout") = yout_mcmc,
     Rcpp::Named("dag") = predict_dag,
-    Rcpp::Named("layers") = layers,
     Rcpp::Named("pred_order") = pred_order
   );
 }
@@ -440,7 +276,6 @@ Rcpp::List radgp_latent_predict(const arma::mat& cout,
                                      const arma::mat& w, 
                                      const arma::mat& coords, double rho,
                                      const arma::mat& theta_mcmc, 
-                                     int M,
                                      int covar,
                                      int num_threads){
   arma::uvec oneuv = arma::ones<arma::uvec>(1);
@@ -461,8 +296,8 @@ Rcpp::List radgp_latent_predict(const arma::mat& cout,
   
   arma::uvec layers;
   arma::field<arma::uvec> predict_dag = 
-    radgpbuild_testset(coords, cout, rho, layers, M);
-  arma::uvec pred_order = arma::sort_index(layers);
+    radgpbuild_testset(coords, cout, rho);
+  arma::uvec pred_order = sort_test(coords, cout);
   
   arma::mat wout_mcmc = arma::zeros(ntest, mcmc);
   arma::mat random_stdnormal = arma::randn(mcmc, ntest);
@@ -478,7 +313,7 @@ Rcpp::List radgp_latent_predict(const arma::mat& cout,
     
     for(int i=0; i<ntest; i++){
       
-      int itarget = pred_order(ntrain+i);
+      int itarget = pred_order(i) + ntrain;
       int idagtarget = itarget - ntrain;
       
       arma::uvec ix = oneuv * (itarget);
@@ -505,7 +340,6 @@ Rcpp::List radgp_latent_predict(const arma::mat& cout,
   return Rcpp::List::create(
     Rcpp::Named("wout") = wout_mcmc,
     Rcpp::Named("dag") = predict_dag,
-    Rcpp::Named("layers") = layers,
     Rcpp::Named("pred_order") = pred_order
   );
 }

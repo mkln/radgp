@@ -71,154 +71,58 @@ arma::field<arma::uvec> neighbor_search(const arma::mat& w, double rho){
 
 //[[Rcpp::export]]
 arma::field<arma::uvec> dagbuild_from_nn(const arma::field<arma::uvec>& Rset, 
-                                         arma::uvec& layers, int& M, const arma::mat& w, double rho){
+                                         const arma::mat& w){
   int nr = Rset.n_elem;
-  double rho2 = rho*rho;
-  
-  M = 1;
-  //arma::uvec layers = arma::zeros<arma::uvec>(nr);
-  arma::field<arma::uvec> R_layers(nr);
-  
-  std::deque<int> queue;
-  arma::uvec oneuv = arma::ones<arma::uvec>(1);
-  std::vector<int> D1;
-  D1.push_back(0);
-  
+  arma::rowvec center = arma::mean(w);
+  // arma::rowvec center = arma::min(w);
+  arma::mat diffs = w - arma::ones<arma::colvec>(nr) * center;
+  arma::colvec c_dist2(nr);
   for(int i=0; i<nr; i++){
-    if(!(layers(i) == 0)){
-      continue;
-    } else {
-      int l = i;
-      for(int k=1; k<M+2; k++){
-        arma::uvec found_elem = arma::find(R_layers(l) == k);
-        if(found_elem.n_elem == 0){ 
-          layers(l) = k;
-          break;
-        }
-      }
-      //M = layers(l) > M ? layers(l) : M;
-      if(layers(l) > M){
-        M += 1;
-      }
-      
-      for(int jx=0; jx < Rset(l).n_elem; jx++){
-        int j = Rset(l)(jx);
-        R_layers(j) = arma::join_vert(R_layers(j), oneuv*layers(l));
-        if(layers(j) == 0){
-          queue.push_back(j); 
-        }
-      } 
-      
-      while(queue.size()>0){
-        l = queue.front();
-        queue.pop_front();
-        if(layers(l) > 0){
-          continue;
-        }
-        for(int k=1; k<M+2; k++){
-          arma::uvec found_elem = arma::find(R_layers(l) == k);
-          if(found_elem.n_elem == 0){ //**
-            layers(l) = k;
-            if(k==1){
-              D1.push_back(l);
-            }
-            break;
-          }
-        }
-        //M = layers(l) > M ? layers(l) : M;
-        if(layers(l) > M){
-          M += 1;
-        }
-        
-        for(int jx=0; jx<Rset(l).n_elem; jx++){
-          int j = Rset(l)(jx);
-          R_layers(j) = arma::join_vert(R_layers(j), oneuv*layers(l));
-          if(layers(j) == 0){
-            queue.push_back(j); 
-          }
-        } 
-      }
-    }
+    c_dist2(i) = arma::dot(diffs.row(i),diffs.row(i));
+  }
+  arma::uvec sorted_id = arma::sort_index(c_dist2);
+  arma::uvec sorted_order(nr);
+  for(int i=0; i<nr; i++){
+    sorted_order(sorted_id(i)) = i;
   }
   arma::field<arma::uvec> Nset(nr);
-  for(int i=0; i<nr; i++){    
-    arma::uvec layers_ne(Rset(i).n_elem);
-    for(int jx=0; jx<Rset(i).n_elem; jx++){
-      int x = Rset(i)(jx);
-      layers_ne(jx) = layers(x);
-    }
-    Nset(i) = Rset(i)(arma::find(layers_ne<layers(i)));
+  for(int i=0; i<nr; i++){
+    Nset(i) = Rset(i)(arma::find(sorted_order(Rset(i))<sorted_order(i)));
   }
-  
-  arma::uvec D1a = arma::conv_to<arma::uvec>::from(D1);
-  for(int ni=1; ni<D1.size(); ni++){
-    arma::vec try_dist2 = arma::zeros(ni);
-    for(unsigned int j=0; j<ni; j++){
-      arma::rowvec rdiff = w.row(D1[j]) - w.row(D1[ni]);
-      try_dist2(j) = arma::accu(rdiff % rdiff);
-    }   
-    // Nset(D1[ni]) = arma::join_cols(Nset(D1[ni]),D1a.elem(arma::find(try_dist2<=4*rho2)));
-    if(Nset(D1[ni]).n_elem == 0){
-      arma::uvec try_sort_id = arma::sort_index(try_dist2);
-      Nset(D1[ni]) = arma::uvec(1,arma::fill::value(D1[try_sort_id(0)]));
+  for(int i=1; i<nr; i++){
+    if(Nset(sorted_id(i)).n_elem == 0){
+      arma::mat diffs_b = w.rows(sorted_id.subvec(0,i-1)) - arma::ones<arma::colvec>(i) * w.row(sorted_id(i));
+      arma::colvec c_dist2_b(i);
+      for(int j=0; j<i; j++){
+        c_dist2_b(j) = arma::dot(diffs_b.row(j),diffs_b.row(j)); 
+      }
+      Nset(i) = c_dist2_b.index_min();
     }
   }
-  for(int ni=1; ni<D1.size(); ni++){
-    if(Nset(D1[ni]).n_elem == 0){
-      Nset(D1[ni]) = D1[ni-1];
-      // Nset(D1[ni]) = arma::uvec(1,arma::fill::value(D1[ni-1]));
-    }
-  }
-
-  // int s=0;
-  // for(int i=0; i<nr; i++){
-  //   s += Nset(i).n_elem;
-  // }
-  // int sr = round(s/nr);
-  // 
-  // arma::uvec D1a = arma::conv_to<arma::uvec>::from(D1);
-  // arma::mat w1 = w.rows(D1a);
-  // NumericMatrix wn = wrap(w1);
-  // arma::uvec ord = as<arma::uvec>(MaxMincpp(wn));
-  // arma::uvec orda = ord-1;
-  // D1a = D1a(orda);
-  // 
-  // for(int ni=1; ni<D1.size(); ni++){
-  //   arma::vec try_dist2 = arma::zeros(ni);
-  //   for(unsigned int j=0; j<ni; j++){
-  //     arma::rowvec rdiff = w.row(D1a(j)) - w.row(D1a(ni));
-  //     try_dist2(j) = arma::accu(rdiff % rdiff); 
-  //   }
-  //   arma::uvec try_sort_id = arma::sort_index(try_dist2);
-  //   int neighbor_size_i = std::min(sr,ni);
-  //   Nset(D1a(ni)) = arma::join_cols(Nset(D1a(ni)),D1a(try_sort_id.rows(0,neighbor_size_i-1)));
-  // }
-  
   return Nset;
 }
 
-arma::field<arma::uvec> radialndag(const arma::mat& w, double rho, arma::uvec& layers, int& M){
+//[[Rcpp::export]]
+arma::field<arma::uvec> radialndag(const arma::mat& w, double rho){
   int nr = w.n_rows;
-  
   arma::field<arma::uvec> Rset = neighbor_search(w, rho);
-  arma::field<arma::uvec> dag = dagbuild_from_nn(Rset, layers, M, w, rho);
-  return dag;
+  return dagbuild_from_nn(Rset, w);
 }
 
 //[[Rcpp::export]]
 Rcpp::List radial_neighbors_dag(const arma::mat& w, double rho){
-  int nr = w.n_rows;
-  arma::uvec layers = arma::zeros<arma::uvec>(nr);
-  
-  Rcpp::Rcout << "neighbor search "<< endl;
-  arma::field<arma::uvec> Rset = neighbor_search(w, rho);
-  Rcpp::Rcout << "dag build"<< endl;
-  int M=0;
-  arma::field<arma::uvec> dag = dagbuild_from_nn(Rset, layers, M, w, rho);
+  int nr = w.n_rows;;
+  arma::field<arma::uvec> dag = radialndag(w, rho);
+  arma::rowvec center = arma::mean(w);
+  arma::mat diffs = w - arma::ones<arma::colvec>(nr) * center;
+  arma::colvec c_dist2(nr);
+  for(int i=0; i<nr; i++){
+    c_dist2(i) = arma::dot(diffs.row(i),diffs.row(i));
+  }
+  arma::uvec sorted_id = arma::sort_index(c_dist2);
   return Rcpp::List::create(
     Rcpp::Named("dag") = dag,
-    Rcpp::Named("layers") = layers,
-    Rcpp::Named("M") = M
+    Rcpp::Named("sorted_id") = sorted_id
   );
 }
 
