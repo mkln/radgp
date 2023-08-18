@@ -3,6 +3,7 @@ library(ggplot2)
 library(transport)
 library(rSPDE)
 library(MASS)
+library(gridExtra)
 
 ##--------------------------------------------------------------------
 dichotomy_solver <- function(fun, l, r, tol=1e-5){
@@ -74,7 +75,24 @@ theta[1] = dichotomy_solver(matern_hint_fun, 10, 50)
 # theta = c(25, 1, 5/2, 0)
 
 ## nugget for latent model
+## common nugget
 nugget <- 1e-2
+## essentially no nugget
+# nugget <- 1e-5
+
+## priors and starting values (results are insensitive to starting values)
+## theta
+theta_start <- c(40, 1, theta[3])
+theta_unif_bounds <- matrix(nrow=3, ncol=2)
+theta_unif_bounds[1,] <- c(1, 100) # phi
+theta_unif_bounds[2,] <- c(.1, 10) # sigmasq
+theta_unif_bounds[3,] <- c(theta[3]-0.001, theta[3]+0.001) # nu
+## nugget
+nugget_start <- c(nugget)
+## weak nugget prior
+nugget_prior <- c(1, nugget)
+## strong nugget prior
+# nugget_prior <- c(10^4, nugget*10^4)
 
 ## training data
 nl = 40
@@ -142,12 +160,12 @@ for (i_repeat in 1:n_repeat){
   coords_test[1:40,] = matrix(runif(40*2),nrow=40,ncol=2)*0.1
   coords_test[1:10,1] = coords_test[1:10,1]+0.45
   coords_test[1:10,2] = coords_test[1:10,2]+0.45
-  coords_test[11:20,1] = coords_test[1:10,1]+0.1
-  coords_test[11:20,2] = coords_test[1:10,2]+0.1  
-  coords_test[21:30,1] = coords_test[1:10,1]+0.7
-  coords_test[21:30,2] = coords_test[1:10,2]+0.2
-  coords_test[31:40,1] = coords_test[1:10,1]+0.3
-  coords_test[31:40,2] = coords_test[1:10,2]+0.9  
+  coords_test[11:20,1] = coords_test[11:20,1]+0.1
+  coords_test[11:20,2] = coords_test[11:20,2]+0.1  
+  coords_test[21:30,1] = coords_test[21:30,1]+0.7
+  coords_test[21:30,2] = coords_test[21:30,2]+0.2
+  coords_test[31:40,1] = coords_test[31:40,1]+0.3
+  coords_test[31:40,2] = coords_test[31:40,2]+0.9  
   flag = FALSE
   while (flag == FALSE){
     coords_raw = matrix(runif(2*ntest*2),nrow=2*ntest,ncol=2)
@@ -192,19 +210,6 @@ for (i_repeat in 1:n_repeat){
   
   
   ##----------------------------------mcmc----------------------------------------
-  theta_start <- c(40, 1, theta[3])
-  theta_unif_bounds <- matrix(nrow=3, ncol=2)
-  theta_unif_bounds[1,] <- c(1, 100) # phi
-  theta_unif_bounds[2,] <- c(.1, 10) # sigmasq
-  theta_unif_bounds[3,] <- c(theta[3]-0.001, theta[3]+0.001) # nu
-  # theta_unif_bounds[3,] <- c(0.1, 10)
-  nugget_start <- c(.01)
-  nugget_prior <- c(1, 0.01)
-  
-  # results_df = data.frame(matrix(0,nrow=n_region*(length(rho_lst)+2*length(m_lst)),ncol=4))
-  # colnames(results_df) <- c('Ave.Neighbors', 'W22', 'Method', 'Region')
-  # row_loc = 1
-  
   ## radgp
   t2 = Sys.time()
   
@@ -316,14 +321,65 @@ for (j in 1:length(m_lst)){
   }
 }
 
+ps = vector('list',4)
+for (r in 1:n_region){
+  ps[[r]] = ggplot(df[which(df$Region==r),]) +
+    geom_line(aes(x=Nonzeros,y=W22,color=Method)) + 
+    geom_ribbon(aes(x=Nonzeros,ymin=W22low,ymax=W22up,fill=Method),alpha=0.2)
+}
+grid.arrange(ps[[1]], ps[[2]], ps[[3]], ps[[4]], nrow=2)
 
-ggplot(df[which(df$Region<=4),]) +
-  geom_line(aes(x=Nonzeros,y=W22,color=Method)) + facet_wrap(~Region, nrow=2)
 
 ggplot(df[which(df$Region==5),]) +
   geom_line(aes(x=Nonzeros,y=W22,color=Method)) +
   geom_ribbon(aes(x=Nonzeros,ymin=W22low,ymax=W22up,fill=Method),alpha=0.2) +
   xlab('Ave.Nonzeros') + theme_minimal(base_size = 25)
+
+
+
+
+##-----------------------exam objs--------------------------
+mcmc_burn = mcmc - mc_true
+
+## radgp prediction using all mcmc chains of nngp
+rad_obj_c = radgp_obj
+rad_obj_c$coords = nngp_obj$coords
+rad_obj_c$w = nngp_obj$w
+rad_obj_c$theta = nngp_obj$theta
+rad_obj_c$nugg = nngp_obj$nugg
+nn2rad_obj = predict(rad_obj_c, coords_test, mcmc_keep=mc_true, n_threads=16)
+wasserstein(pp(ztrue_mc), pp(t(nn2rad_obj$wout)), p=2)
+
+## radgp prediction using paraemter chains of radgp and random effects chains of nngp
+rad_obj_c = radgp_obj
+rad_obj_c$coords = nngp_obj$coords
+rad_obj_c$w = nngp_obj$w
+nn2rad_obj = predict(rad_obj_c, coords_test, mcmc_keep=mc_true, n_threads=16)
+wasserstein(pp(ztrue_mc), pp(t(nn2rad_obj$wout)), p=2)
+
+nn_obj_c = nngp_obj
+nn_obj_c$coords = coords_train
+nn_obj_c$w = radgp_obj$w
+nn_obj_c$theta = radgp_obj$theta
+nn_obj_c$nugg = radgp_obj$nugg
+rad2nn_obj = predict(nn_obj_c, coords_test, mcmc_keep=mc_true, n_threads=16, independent=TRUE)
+wasserstein(pp(ztrue_mc), pp(t(rad2nn_obj$wout)), p=2)
+
+
+
+
+
+
+# nn2rad = radgp_latent_predict(coords_test, nngp_obj$w[,-(1:mcmc_burn)], 
+#                               nngp_obj$coords, rho, 
+#                               nngp_obj$theta[,-(1:mcmc_burn)], nngp_obj$covar, 16)
+# 
+# rad2nn = vecchiagp_latent_predict(coords_test, radgp_obj$w[,-(1:mcmc_burn)], 
+#                                   coords_train, radgp_obj$dag,
+#                                   radgp_obj$theta[,-(1:mcmc_burn)], radgp_obj$covar, 16)
+
+
+
 
 
 
