@@ -27,7 +27,8 @@ void latent_mcmc(DagGP& adag,
                    arma::mat& w_mcmc,
                    arma::vec& tausq_mcmc,
                    arma::vec& logdens_mcmc,
-                   int mcmc, 
+                   int mcmc,
+                   arma::vec& cg_iter,
                    const arma::vec& theta_init,
                    double tausq_init,
                    double metrop_sd,
@@ -69,6 +70,8 @@ void latent_mcmc(DagGP& adag,
   w_mcmc = arma::zeros(n, mcmc);
   logdens_mcmc = arma::zeros(mcmc);
   
+  cg_iter = arma::zeros(mcmc);
+  
   // solver
   Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower|Eigen::Upper> cg;
   cg.setTolerance(1e-6);
@@ -105,6 +108,8 @@ void latent_mcmc(DagGP& adag,
     cg.compute(Phihat);
     
     Eigen::MatrixXd we = cg.solveWithGuess(wtemp_e, ye/tausq);
+    cg_iter(m) = cg.iterations();
+    
     tend = std::chrono::steady_clock::now();
     int time_solve = std::chrono::duration_cast<std::chrono::nanoseconds>(tend - tstart).count();
     //Rcpp::Rcout << "solve : " << time_solve << endl;
@@ -249,10 +254,12 @@ Rcpp::List radgp_latent(const arma::vec& y,
   arma::mat w_mcmc;
   arma::vec tausq_mcmc;
   arma::vec logdens_mcmc;
+  arma::vec cg_iter;
   
   latent_mcmc(adag, theta_mcmc, w_mcmc, tausq_mcmc, 
               logdens_mcmc, 
-              mcmc, theta_init, tausq_init,
+              mcmc, cg_iter, 
+              theta_init, tausq_init,
               metrop_sd, theta_unif_bounds, tausq_prior, print_every);
 
   return Rcpp::List::create(
@@ -265,7 +272,8 @@ Rcpp::List radgp_latent(const arma::vec& y,
     Rcpp::Named("theta") = theta_mcmc,
     Rcpp::Named("w") = w_mcmc,
     Rcpp::Named("nugg") = tausq_mcmc,
-    Rcpp::Named("covar") = covar
+    Rcpp::Named("covar") = covar,
+    Rcpp::Named("cg_iter") = cg_iter
   );
 }
 
@@ -297,10 +305,12 @@ Rcpp::List daggp_custom_latent(const arma::vec& y,
   arma::mat w_mcmc;
   arma::vec tausq_mcmc;
   arma::vec logdens_mcmc;
+  arma::vec cg_iter;
   
   latent_mcmc(adag, theta_mcmc, w_mcmc, tausq_mcmc, 
               logdens_mcmc, 
-              mcmc, theta_init, tausq_init, 
+              mcmc, cg_iter,
+              theta_init, tausq_init, 
               metrop_sd, theta_unif_bounds, 
               tausq_prior, print_every);
     
@@ -311,7 +321,8 @@ Rcpp::List daggp_custom_latent(const arma::vec& y,
       Rcpp::Named("theta") = theta_mcmc,
       Rcpp::Named("w") = w_mcmc,
       Rcpp::Named("nugg") = tausq_mcmc,
-      Rcpp::Named("covar") = covar
+      Rcpp::Named("covar") = covar,
+      Rcpp::Named("cg_iter") = cg_iter
     );
 }
 
