@@ -144,14 +144,17 @@ matern_hint_fun <- function(phi, dist=0.15, sigmasq=1, thre=0.05){
 }
 theta[1] = dichotomy_solver(matern_hint_fun, 10, 50)
 nugget <- 0.01
-CC <- radgp::Correlationc(coords_all, coords_all, theta, 0, T)
+CC <- radgp::Correlationc(coords_all, coords_all, theta, 1, T)  ## 0 for power exponential, anything else for matern
 CC_train <- CC[1:ntrain,1:ntrain]
 
+# rho_lst = c(0.055, 0.065, 0.075, 0.085, 0.095, 0.105, 0.115, 0.125, 0.14, 0.155, 0.17)
+# m_lst = c(5, 7, 9, 12, 15, 18, 22, 26, 30, 35, 40)
+# rho_lst = c(0.045, 0.055, 0.065, 0.075, 0.085, 0.095, 0.105, 0.114, 0.125)
+# m_lst = c(3, 4, 5, 7, 9, 12, 15, 18, 22)
 
-rho_lst = c(0.055, 0.065, 0.075, 0.085, 0.095, 0.105, 0.115, 0.125, 0.14, 0.155, 0.17)
-m_lst = c(5, 7, 9, 12, 15, 18, 22, 26, 30, 35, 40)
-
-
+rho_lst = c(0.035, 0.045, 0.0525, 0.0600, 0.0675, 0.075, 0.0810, 0.0900, 0.0975, 0.1050, 0.1125, 0.1200, 
+            0.1275, 0.1350, 0.1425, 0.1500)
+m_lst = c(2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 19, 21, 24, 27, 30, 35)
 
 ## nngp
 W22_mat = matrix(0,nrow=length(m_lst),ncol=2)
