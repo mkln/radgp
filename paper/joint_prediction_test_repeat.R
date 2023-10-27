@@ -86,7 +86,10 @@ theta_start <- c(40, 1, theta[3])
 theta_unif_bounds <- matrix(nrow=3, ncol=2)
 theta_unif_bounds[1,] <- c(1, 100) # phi
 theta_unif_bounds[2,] <- c(.1, 10) # sigmasq
-theta_unif_bounds[3,] <- c(theta[3]-0.001, theta[3]+0.001) # nu
+## nu known
+theta_unif_bounds[3,] <- c(theta[3]-0.001, theta[3]+0.001)
+## nu to be fitted
+# theta_unif_bounds[3,] <- c(0.1, 10)
 ## nugget
 nugget_start <- c(nugget)
 ## weak nugget prior
@@ -98,7 +101,7 @@ nugget_prior <- c(1, nugget)
 nl = 40
 ntrain = nl^2
 coords_train = as.matrix(expand.grid(xout<-seq(0,1,length.out=nl),xout))
-CC_train <- radgp::Correlationc(coords_train, coords_train, theta, 0, T)
+CC_train <- radgp::Correlationc(coords_train, coords_train, theta, 1, T)  ## 0 for power exponential, anything else for matern
 CC_train_inv <- ginv(CC_train)
 eigenobj_train = eigen(CC_train,symmetric=TRUE)
 D_train = pmax(eigenobj_train$values,0)
@@ -106,8 +109,9 @@ U_train = eigenobj_train$vectors
 LC_train <- U_train %*% diag(sqrt(D_train)) %*% t(U_train)
 
 ## calculate information only relavent to training data
-rho_lst = c(0.045, 0.055, 0.065, 0.075, 0.085, 0.095, 0.105, 0.114, 0.125)
-m_lst = c(3, 4, 5, 7, 9, 12, 15, 18, 22)
+rho_lst = c(0.035, 0.045, 0.0525, 0.0600, 0.0675, 0.075, 0.0810, 0.0900, 0.0975, 0.1050, 0.1125, 0.1200)
+# rho_lst = c(0.035, 0.045, 0.055, 0.065, 0.075, 0.085, 0.095, 0.105, 0.114, 0.125)
+m_lst = c(2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 19, 21)
 ave_nonzeros = vector('numeric', length=length(rho_lst)+length(m_lst))
 for (j in 1:length(rho_lst)){
   rho = rho_lst[j]
@@ -186,7 +190,7 @@ for (i_repeat in 1:n_repeat){
   coords_all = rbind(coords_train, coords_test)
   
   ## generate joint test samples from the true conditional distribution
-  CC <- radgp::Correlationc(coords_all, coords_all, theta, 0, T)
+  CC <- radgp::Correlationc(coords_all, coords_all, theta, 1, T)
   z_train <- LC_train %*% rnorm(ntrain) 
   y_train = z_train + nugget^.5 * rnorm(ntrain)
   CC_test <- CC[(ntrain+1):nall,(ntrain+1):nall]
@@ -200,6 +204,10 @@ for (i_repeat in 1:n_repeat){
   ## ztrue_mc is a mc_true*ntest matrices of joint test samples
   for (i in 1:mc_true){
     ztrue_mc[i,] = LC_cond %*% rnorm(ntest) + CC_testtrain %*% CC_train_inv %*% z_train
+  }
+  ztrue_mc_2 = matrix(nrow=mc_true,ncol=ntest)
+  for (i in 1:mc_true){
+    ztrue_mc_2[i,] = LC_cond %*% rnorm(ntest) + CC_testtrain %*% CC_train_inv %*% z_train
   }
   
   # # some extra experimental data
@@ -322,65 +330,119 @@ for (j in 1:length(m_lst)){
 }
 
 ps = vector('list',4)
+haslab = c(0,1,0,1)
 for (r in 1:n_region){
-  ps[[r]] = ggplot(df[which(df$Region==r),]) +
-    geom_line(aes(x=Nonzeros,y=W22,color=Method)) + 
-    geom_ribbon(aes(x=Nonzeros,ymin=W22low,ymax=W22up,fill=Method),alpha=0.2)
+  if (haslab[r] == 1){
+    ps[[r]] = ggplot(df[which(df$Region==r),]) +
+      geom_line(aes(x=Nonzeros,y=W22,color=Method)) + 
+      geom_ribbon(aes(x=Nonzeros,ymin=W22low,ymax=W22up,fill=Method),alpha=0.2) +
+      xlab('Ave.Nonzeros') + theme_minimal(base_size = 25) 
+  } else{
+    ps[[r]] = ggplot(df[which(df$Region==r),]) +
+      geom_line(aes(x=Nonzeros,y=W22,color=Method)) + 
+      geom_ribbon(aes(x=Nonzeros,ymin=W22low,ymax=W22up,fill=Method),alpha=0.2) +
+      theme_minimal(base_size = 25) + xlab('Ave.Nonzeros') + theme(legend.position='none')
+  }
 }
-grid.arrange(ps[[1]], ps[[2]], ps[[3]], ps[[4]], nrow=2)
+plot_grid(ps[[1]], ps[[2]], ps[[3]], ps[[4]], align='h', nrow=2, rel_widths=c(0.45,0.55))
 
 
-ggplot(df[which(df$Region==5),]) +
+
+
+df5 = df[which(df$Region==5),]
+ggplot(df5) +
   geom_line(aes(x=Nonzeros,y=W22,color=Method)) +
   geom_ribbon(aes(x=Nonzeros,ymin=W22low,ymax=W22up,fill=Method),alpha=0.2) +
   xlab('Ave.Nonzeros') + theme_minimal(base_size = 25)
 
 
+wasserstein(pp(ztrue_mc), pp(ztrue_mc_2), p=2)
+
+
 
 
 ##-----------------------exam objs--------------------------
-mcmc_burn = mcmc - mc_true
-
-## radgp prediction using all mcmc chains of nngp
-rad_obj_c = radgp_obj
-rad_obj_c$coords = nngp_obj$coords
-rad_obj_c$w = nngp_obj$w
-rad_obj_c$theta = nngp_obj$theta
-rad_obj_c$nugg = nngp_obj$nugg
-nn2rad_obj = predict(rad_obj_c, coords_test, mcmc_keep=mc_true, n_threads=16)
-wasserstein(pp(ztrue_mc), pp(t(nn2rad_obj$wout)), p=2)
-
-## radgp prediction using paraemter chains of radgp and random effects chains of nngp
-rad_obj_c = radgp_obj
-rad_obj_c$coords = nngp_obj$coords
-rad_obj_c$w = nngp_obj$w
-nn2rad_obj = predict(rad_obj_c, coords_test, mcmc_keep=mc_true, n_threads=16)
-wasserstein(pp(ztrue_mc), pp(t(nn2rad_obj$wout)), p=2)
-
-nn_obj_c = nngp_obj
-nn_obj_c$coords = coords_train
-nn_obj_c$w = radgp_obj$w
-nn_obj_c$theta = radgp_obj$theta
-nn_obj_c$nugg = radgp_obj$nugg
-rad2nn_obj = predict(nn_obj_c, coords_test, mcmc_keep=mc_true, n_threads=16, independent=TRUE)
-wasserstein(pp(ztrue_mc), pp(t(rad2nn_obj$wout)), p=2)
-
-
-
-
-
-
-# nn2rad = radgp_latent_predict(coords_test, nngp_obj$w[,-(1:mcmc_burn)], 
-#                               nngp_obj$coords, rho, 
-#                               nngp_obj$theta[,-(1:mcmc_burn)], nngp_obj$covar, 16)
+# mcmc_burn = mcmc - mc_true
 # 
-# rad2nn = vecchiagp_latent_predict(coords_test, radgp_obj$w[,-(1:mcmc_burn)], 
-#                                   coords_train, radgp_obj$dag,
-#                                   radgp_obj$theta[,-(1:mcmc_burn)], radgp_obj$covar, 16)
+# ## radgp prediction using all mcmc chains of nngp
+# rad_obj_c = radgp_obj
+# rad_obj_c$coords = nngp_obj$coords
+# rad_obj_c$w = nngp_obj$w
+# rad_obj_c$theta = nngp_obj$theta
+# rad_obj_c$nugg = nngp_obj$nugg
+# nn2rad_obj = predict(rad_obj_c, coords_test, mcmc_keep=mc_true, n_threads=16)
+# wasserstein(pp(ztrue_mc), pp(t(nn2rad_obj$wout)), p=2)
+# 
+# ## radgp prediction using paraemter chains of radgp and random effects chains of nngp
+# rad_obj_c = radgp_obj
+# rad_obj_c$coords = nngp_obj$coords
+# rad_obj_c$w = nngp_obj$w
+# nn2rad_obj = predict(rad_obj_c, coords_test, mcmc_keep=mc_true, n_threads=16)
+# wasserstein(pp(ztrue_mc), pp(t(nn2rad_obj$wout)), p=2)
+# 
+# nn_obj_c = nngp_obj
+# nn_obj_c$coords = coords_train
+# nn_obj_c$w = radgp_obj$w
+# nn_obj_c$theta = radgp_obj$theta
+# nn_obj_c$nugg = radgp_obj$nugg
+# rad2nn_obj = predict(nn_obj_c, coords_test, mcmc_keep=mc_true, n_threads=16, independent=TRUE)
+# wasserstein(pp(ztrue_mc), pp(t(rad2nn_obj$wout)), p=2)
+# 
+# 
+# ## semi-true predictions
+# ztrue_rad = matrix(nrow=mc_true,ncol=ntest)
+# for (i in 1:mc_true){
+#   ztrue_rad[i,] = LC_cond %*% rnorm(ntest) + CC_testtrain %*% CC_train_inv %*% radgp_obj$w[,mcmc_burn+i]
+# }
+# wasserstein(pp(ztrue_mc), pp(ztrue_rad), p=2)
+# 
+# ztrue_nn = matrix(nrow=mc_true,ncol=ntest)
+# for (i in 1:mc_true){
+#   ztrue_nn[i,] = LC_cond %*% rnorm(ntest) + CC_testtrain %*% CC_train_inv %*% nngp_obj$w[,mcmc_burn+i]
+# }
+# wasserstein(pp(ztrue_mc), pp(ztrue_nn), p=2)
+# 
+# 
+# wasserstein(pp(ztrue_mc), pp(ztrue_mc_2), p=2)
+# 
+# S_rad = 0
+# for (l in 1:mc_true){
+#   S_rad = S_rad + sum((z_train - radgp_obj$w[,mcmc_burn+l])^2)
+# }
+# S_rad = S_rad / ntrain
+# 
+# S_nn = 0
+# sorted_order = vector('numeric',ntrain)
+# for (i in 1:ntrain){
+#   sorted_order[nngp_obj$ord[i]] = i
+# }
+# nn_w = nngp_obj$w[sorted_order,]
+# for (l in 1:mc_true){
+#   S_nn = S_nn + sum((z_train - nn_w[,mcmc_burn+l])^2)
+# }
+# S_nn = S_nn / ntrain
 
 
-
-
+##---------------------------exam dags---------------------------------------
+# idr = 1120
+# 
+# # plot(coords_train[radgp_obj$dag[[idr]]+1,1],coords_train[radgp_obj$dag[[idr]]+1,2])
+# 
+# 
+# df_dag = data.frame(matrix(0, nrow=ntrain,ncol=3))
+# colnames(df_dag) = c('x1', 'x2', 'order')
+# df_dag[,1:2] = coords_train
+# df_dag$type = 'other'
+# df_dag$type[radgp_obj$dag[[idr]]+1] = 'parent'
+# for (l in 1:ntrain){
+#   for (k in radgp_obj$dag[[l]]){
+#     if (k+1 == idr){
+#       df_dag$type[l] = 'chilren'
+#     }
+#   }
+# }
+# ggplot() +
+#   geom_point(data=df_dag, aes(x1,x2,color=type)) 
 
 
 
