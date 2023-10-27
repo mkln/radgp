@@ -139,9 +139,13 @@ CC_train = cov_mat(coords_train, expfun)
 
 ## Matern covariance function
 theta <- c(20, 1, 3/2, 0)
-matern_hint_fun <- function(phi, dist=0.15, sigmasq=1, thre=0.05){
-  return( thre - sigmasq*(1+phi*dist) * exp(-phi*dist) )
-}
+# matern_hint_fun <- function(phi, dist=0.15, sigmasq=1, thre=0.05){
+#   return( thre - sigmasq*(1+phi*dist) * exp(-phi*dist) )
+# }
+nu_matern = 7/2
+matern_hint_fun <- function(phi, dist=0.15, sigmasq=1, nu=nu_matern, thre=0.05){
+  return( thre - spaMM::MaternCorr(dist, phi, smoothness=nu, nu=nu, Nugget = NULL) )
+} 
 theta[1] = dichotomy_solver(matern_hint_fun, 10, 50)
 nugget <- 0.01
 CC <- radgp::Correlationc(coords_all, coords_all, theta, 1, T)  ## 0 for power exponential, anything else for matern
@@ -242,12 +246,12 @@ W22_dat = rbind(W22_dat, W22_dat_new)
 ## plot results
 p1 = ggplot(W22_dat) +
   geom_line(aes(x=Ave.Nonzeros,y=W22,color=Method),size=1.5) +
-  theme_minimal(base_size = 25) + theme(legend.position='none')
+  theme_minimal(base_size = 25) + theme(legend.position='none') + ylab(bquote(W[2]^2)) 
 W22_dat_m = W22_dat
 W22_dat_m$logW22 = log(W22_dat_m$W22)
 p2 = ggplot(W22_dat_m) +
-  geom_line(aes(x=Ave.Nonzeros,y=logW22,color=Method),size=1.5) +
-  theme_minimal(base_size = 25)
+  geom_line(aes(x=Ave.Nonzeros,y=logW22,color=Method),size=1.5) + 
+  theme_minimal(base_size = 25) + ylab(bquote(logW[2]^2)) 
 plot_grid(p1, p2, align='h', nrow=1, rel_widths=c(0.45,0.55))
 
 
