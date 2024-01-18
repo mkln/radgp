@@ -5,6 +5,7 @@ library(rSPDE)
 library(MASS)
 library(reshape2)
 library(latex2exp)
+library(cowplot)
 
 ##--------------------------------------------------------------------
 dichotomy_solver <- function(fun, l, r, tol=1e-5){
