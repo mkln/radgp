@@ -246,7 +246,7 @@ for (j in 1:length(m_lst)){
 ggplot(df) +
   geom_line(aes(x=Nonzeros,y=W22,color=Method)) +
   geom_ribbon(aes(x=Nonzeros,ymin=W22low,ymax=W22up,fill=Method),alpha=0.2) +
-  xlab('Ave.Nonzeros') + ylab(TeX('$W_2^2$')) + theme_minimal(base_size = 25)
+  xlab('Precision Nonzeros') + ylab(TeX('$W_2^2$')) + theme_minimal(base_size = 25)
 
 
 

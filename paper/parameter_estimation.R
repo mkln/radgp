@@ -58,34 +58,13 @@ set.seed(50)
 mc_true = 1000
 mcmc = 2500
 
-# mc_true = 5
-# mcmc = 10
-
-## covariance settings
-## Gaussian covariance function
-# phi = - log(0.05)/0.15^2
-# expfun <- function(x,phi=133.14){
-#   return(exp(-phi*x^2))
-# }
-
-cov_model = 'pexp'    ## 'pexp' for power exponential, everything else for Matern
-cov_model = 1
-
 ## Matern covariance function
-theta <- c(20, 1, 3/2, 0)
+theta <- c(20, 1, 5/2, 0)
 matern_hint_fun <- function(phi, dist=0.15, sigmasq=1, thre=0.05){
   return( thre - sigmasq*(1+phi*dist) * exp(-phi*dist) )
 }
 theta[1] = dichotomy_solver(matern_hint_fun, 10, 50)
 
-## Power exponential function
-theta <- c(20, 1, 3/2, 0)
-
-
-
-## if desire high smoothness
-# theta = c(20, 1, 3/2, 0)
-# theta = c(25, 1, 5/2, 0)
 
 ## nugget for latent model
 nugget <- 1e-2
@@ -136,6 +115,7 @@ print(t1-t0)
 phi_records = matrix(0, nrow=length(rho_lst)+length(m_lst), ncol=mc_true)
 tau2_records = matrix(0, nrow=length(rho_lst)+length(m_lst), ncol=mc_true)
 nugg_records = matrix(0, nrow=length(rho_lst)+length(m_lst), ncol=mc_true)
+cg_records = matrix(0, nrow=length(rho_lst)+length(m_lst), ncol=mcmc)
 
 ## uniform test data
 ntest = 1000
@@ -174,6 +154,7 @@ for (j in 1:length(rho_lst)){
   phi_records[j,] = radgp_obj$theta[1,(mcmc-mc_true+1):mcmc]
   tau2_records[j,] = radgp_obj$theta[2,(mcmc-mc_true+1):mcmc]
   nugg_records[j,] = radgp_obj$nugg[(mcmc-mc_true+1):mcmc]
+  cg_records[j,] = radgp_obj$cg_iter
   
   print(paste('Inner loop finished: ', j, '/', length(rho_lst)+length(m_lst), sep=''))
   print(Sys.time() - t2)
@@ -192,6 +173,7 @@ for (j in 1:length(m_lst)){
   phi_records[length(rho_lst)+j,] = nngp_obj$theta[1,(mcmc-mc_true+1):mcmc]
   tau2_records[length(rho_lst)+j,] = nngp_obj$theta[2,(mcmc-mc_true+1):mcmc]
   nugg_records[length(rho_lst)+j,] = nngp_obj$nugg[(mcmc-mc_true+1):mcmc]  
+  cg_records[length(rho_lst)+j,] = nngp_obj$cg_iter
 
   print(paste('Inner loop finished: ', length(rho_lst)+j, '/', length(rho_lst)+length(m_lst), sep=''))
   print(Sys.time() - t2)
@@ -228,31 +210,106 @@ conf_df <- function(xall, datall, n1){
 
 
 df_phi = conf_df(ave_nonzeros, phi_records, length(rho_lst))
-ggplot(df_phi) +
+p_phi = ggplot(df_phi) +
   geom_line(aes(x=Nonzeros,y=mean,color=Method)) +
   geom_ribbon(aes(x=Nonzeros,ymin=low,ymax=up,fill=Method),alpha=0.2) +
-  xlab('Ave.Nonzeros') + ylab(TeX('$\\Phi$')) + theme_minimal(base_size = 25) +
-  geom_hline(yintercept = theta[1])
-
+  xlab('Precision Nonzeros') + ylab(TeX('$\\Phi$')) + theme_minimal(base_size = 20) +
+  geom_hline(yintercept = theta[1]) + theme(legend.position='none') +
+  scale_colour_manual(values = c("#F8766D", "#619CFF", 'black')) + 
+  scale_fill_manual(values = c("#F8766D", "#619CFF", 'black')) 
 
 df_tau2 = conf_df(ave_nonzeros, tau2_records, length(rho_lst))
-ggplot(df_tau2) +
+p_tau2 = ggplot(df_tau2) +
   geom_line(aes(x=Nonzeros,y=mean,color=Method)) +
   geom_ribbon(aes(x=Nonzeros,ymin=low,ymax=up,fill=Method),alpha=0.2) +
-  xlab('Ave.Nonzeros') + ylab(TeX('$\\tau^2$')) + theme_minimal(base_size = 25) +
-  geom_hline(yintercept = theta[2])
-
+  xlab('Precision Nonzeros') + ylab(TeX('$\\tau^2$')) + theme_minimal(base_size = 20) +
+  geom_hline(yintercept = theta[2]) + theme(legend.position='none') +
+  scale_colour_manual(values = c("#F8766D", "#619CFF", 'black')) + 
+  scale_fill_manual(values = c("#F8766D", "#619CFF", 'black')) 
+  
 df_nugg = conf_df(ave_nonzeros, nugg_records, length(rho_lst))
-ggplot(df_nugg) +
+p_nugg = 
+  ggplot(df_nugg) +
   geom_line(aes(x=Nonzeros,y=mean,color=Method)) +
   geom_ribbon(aes(x=Nonzeros,ymin=low,ymax=up,fill=Method),alpha=0.2) +
-  xlab('Ave.Nonzeros') + ylab(TeX('Nugget $\\sigma^2$')) + theme_minimal(base_size = 25) +
-  geom_hline(yintercept = nugget)
+  geom_hline(aes(yintercept = nugget,color='Truth')) +
+  xlab('Precision Nonzeros') + ylab(TeX('Nugget $\\sigma^2$')) + theme_minimal(base_size = 20) +
+  scale_colour_manual(values = c("#F8766D", "#619CFF", 'black')) + 
+  scale_fill_manual(values = c("#F8766D", "#619CFF", 'black')) + guides(fill="none")
+  
+plot_grid(p_phi, p_tau2, p_nugg, align='h', nrow=1, rel_widths=c(0.31,0.31,0.38))
+
+df_cg = conf_df(ave_nonzeros, cg_records, length(rho_lst))
+p_cg = 
+  ggplot(df_cg) +
+  geom_line(aes(x=Nonzeros,y=mean,color=Method)) +
+  geom_ribbon(aes(x=Nonzeros,ymin=low,ymax=up,fill=Method),alpha=0.2) +
+  xlab('Precision Nonzeros') + ylab('CG Iterations') + theme_minimal(base_size = 20)
 
 
 
 
+##-----------------------Exam posterior Mixing---------------------------
+j1 = 2
+j2 = 2
+rho = rho_lst[j1]
+m = m_lst[j2]
+radgp_obj <- latent.model(y_train, coords_train, rho,
+                          theta_start=theta_start,
+                          theta_prior=theta_unif_bounds,
+                          nugg_start=nugget,
+                          nugg_prior=nugget_prior,
+                          mcmc=mcmc, n_threads=16, covariance_model = 1, printn=3)
 
+nngp_obj <- latent.model.vecchia(y_train, coords_train, m,
+                                 theta_start=theta_start,
+                                 theta_prior=theta_unif_bounds,
+                                 nugg_start=nugget,
+                                 nugg_prior=nugget_prior,
+                                 mcmc=mcmc, n_threads=16, covariance_model = 1, printn=3)
+df_trace = data.frame(c(1:mcmc,1:mcmc), c(radgp_obj$theta[1,],nngp_obj$theta[1,]), 
+                      c(radgp_obj$theta[2,],nngp_obj$theta[2,]),
+                      c(radgp_obj$nugg,nngp_obj$nugg))
+colnames(df_trace) <- c('mcmc', 'phi', 'tau2', 'nugg')
+df_trace$Method = 'RadGP'
+df_trace$Method[(mcmc+1):(2*mcmc)] = 'NNGP'
+
+
+
+p_t1 = 
+  ggplot(df_trace) +
+  geom_line(aes(x=mcmc,y=phi,color=Method)) +
+  xlab('Precision Nonzeros') + ylab(TeX('$\\Phi$')) + theme_minimal(base_size = 20) +
+  geom_hline(yintercept = theta[1]) + theme(legend.position='none') +
+  scale_colour_manual(values = c("#F8766D", "#619CFF", 'black'))
+
+p_t2 = 
+  ggplot(df_trace) +
+  geom_line(aes(x=mcmc,y=tau2,color=Method)) +
+  xlab('Precision Nonzeros') + ylab(TeX('$\\tau^2$')) + theme_minimal(base_size = 20) +
+  geom_hline(yintercept = theta[2]) + theme(legend.position='none') +
+  scale_colour_manual(values = c("#F8766D", "#619CFF", 'black')) 
+
+p_t3 = ggplot(df_trace) +
+  geom_line(aes(x=mcmc,y=nugg,color=Method)) +
+  xlab('Precision Nonzeros') + ylab(TeX('$Nugget \\sigma^2$')) + theme_minimal(base_size = 20) +
+  geom_hline(yintercept = nugget) +
+  scale_colour_manual(values = c("#F8766D", "#619CFF", 'black')) 
+
+a1 = acf(df_trace$phi)[['acf']][,1,1]
+a2 = acf(df_trace$tau2)[['acf']][,1,1]
+a3 = acf(df_trace$nugg)[['acf']][,1,1]
+n_ac = length(a1)
+df_ac = data.frame(c(1:n_ac,1:n_ac,1:n_ac),c(a1,a2,a3),
+                c(rep('phi',n_ac),rep('tau2',n_ac),rep('nugg',n_ac)))
+colnames(df_ac) <- c('Lag','ACF','Variable')
+p_ac = 
+  ggplot(df_ac) +
+  geom_line(aes(x=Lag,y=ACF,color=Variable)) +
+  ylab('Auto Correlation') + theme_minimal(base_size = 20)
+
+plot_grid(p_t1, p_t2, p_t3, align='h', nrow=1, rel_widths=c(0.31,0.31,0.38))
+plot_grid(p_cg, p_ac, align='h', nrow=1, rel_widths=c(0.5, 0.5))
 
 
 

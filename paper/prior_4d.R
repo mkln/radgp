@@ -180,12 +180,14 @@ W22_dat = rbind(W22_dat, W22_dat_new)
 ## plot results
 p1 = ggplot(W22_dat) +
   geom_line(aes(x=Ave.Nonzeros,y=W22,color=Method),size=1.5) +
-  theme_minimal(base_size = 25) + theme(legend.position='none') + ylab(bquote(W[2]^2)) 
+  theme_minimal(base_size = 25) + theme(legend.position='none') + 
+  ylab(bquote(W[2]^2)) + xlab('Precision Nonzeros')
 W22_dat_m = W22_dat
 W22_dat_m$logW22 = log(W22_dat_m$W22)
 p2 = ggplot(W22_dat_m) +
   geom_line(aes(x=Ave.Nonzeros,y=logW22,color=Method),size=1.5) + 
-  theme_minimal(base_size = 25) + ylab(bquote(logW[2]^2)) 
+  theme_minimal(base_size = 25) + 
+  ylab(bquote(logW[2]^2)) + xlab('Precision Nonzeros')
 plot_grid(p1, p2, align='h', nrow=1, rel_widths=c(0.45,0.55))
 
 

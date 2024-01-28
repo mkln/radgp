@@ -114,8 +114,16 @@ spin_sort <- function(coords){
 
 ## grid training data
 nl = 40
+nl = 50
 ntrain = nl^2
 coords_train = as.matrix(expand.grid(xout<-seq(0,1,length.out=nl),xout))
+a = 1/(nl-1)
+# print('minimal distance values on grid')
+# print(c(a, sqrt(2)*a, 2*a, sqrt(5)*a, sqrt(8)*a, 3*a))
+
+# uniform training data
+# ntrain = 1600
+# coords_train = matrix(runif(ntrain*2),nrow=(ntrain),ncol=2)
 
 ## uniform test data
 ntest = 1000
@@ -132,21 +140,34 @@ CC_train = cov_mat(coords_train, expfun)
 
 ## Matern covariance function
 theta <- c(20, 1, 3/2, 0)
+# matern_hint_fun <- function(phi, dist=0.15, sigmasq=1, thre=0.05){
+#   return( thre - sigmasq*(1+phi*dist) * exp(-phi*dist) )
+# }
 nu_matern = 3/2
 dist_thre = 0.05
-
+dist_thre = 0.25
 matern_hint_fun <- function(phi, dist=0.15, sigmasq=1, nu=nu_matern, thre=dist_thre){
   return( dist_thre - spaMM::MaternCorr(dist, phi, smoothness=nu, nu=nu, Nugget = NULL) )
 } 
 theta[1] = dichotomy_solver(matern_hint_fun, 10, 50)
-nugget <- 0.01
+nugget <- 0.1
 CC <- radgp::Correlationc(coords_all, coords_all, theta, 1, T)  ## 0 for power exponential, anything else for matern
+CC = CC + nugget * diag(rep(1,nrow(coords_all)))
 CC_train <- CC[1:ntrain,1:ntrain]
+
+# rho_lst = c(0.055, 0.065, 0.075, 0.085, 0.095, 0.105, 0.115, 0.125, 0.14, 0.155, 0.17)
+# m_lst = c(5, 7, 9, 12, 15, 18, 22, 26, 30, 35, 40)
+# rho_lst = c(0.045, 0.055, 0.065, 0.075, 0.085, 0.095, 0.105, 0.114, 0.125)
+# m_lst = c(3, 4, 5, 7, 9, 12, 15, 18, 22)
 
 rho_lst = c(0.035, 0.045, 0.0525, 0.0600, 0.0675, 0.075, 0.0810, 0.0900, 0.0975, 0.1050, 0.1125, 0.1200, 
             0.1275, 0.1350, 0.1425, 0.1500)
-
+## if using nl = 40:
 m_lst = c(2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 19, 21, 24, 27, 30, 35)
+
+## if using nl = 50:
+m_lst = c(2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 19, 21, 24, 27, 30, 35, 40, 45, 50, 55, 60)
+
 
 ## nngp
 W22_mat = matrix(0,nrow=length(m_lst),ncol=2)
@@ -161,6 +182,7 @@ for (j in 1:length(m_lst)){
     dag_nn[[ixmm[i]]] = ixmm[neighbor_mat[!is.na(neighbor_mat)][-1]]
   }
   CC_train_nn_obj = cov_dag(CC_train, dag_nn)
+  # W22_mat[j,] = c(mean_neighbors(dag_nn), W22(CC_train, CC_train_nn_obj[[1]]))
   W22_mat[j,] = c(CC_train_nn_obj[[2]], W22(CC_train, CC_train_nn_obj[[1]]))
   print(paste('nngp: ', j,'th finished'))
 }
@@ -181,6 +203,22 @@ for (j in 1:length(rho_lst)){
   for (i in 1:ntrain){
     Nsets[[i]] = Nsets[[i]] + 1
   }
+  # Rsets = neighbor_search(coords_train, rho)
+  # Nsets = vector('list',ntrain)
+  # for (i in 1:ntrain){
+  #   candidates = Rsets[[i]] + 1   ## C++ starts from 0 while R starts from 1
+  #   Nsets[[i]] = candidates[which(sorted_order[candidates] < sorted_order[i])]
+  # }
+  # ## add a single closest location when there is no parents
+  # for (i in 2:ntrain){
+  #   i_origin = sorted_ind[i]
+  #   if (length(Nsets[[i_origin]]) == 0){
+  #     coords_now = coords_train[i_origin,]
+  #     inds_b = sorted_ind[1:(i-1)]
+  #     ds = rowSums((coords_train[inds_b,] - matrix(1,nrow=length(inds_b),ncol=1) %*% coords_now)^2)
+  #     Nsets[[i_origin]] = inds_b[which.min(ds)]
+  #   }
+  # }
   CC_train_spin_obj = cov_dag(CC_train, Nsets) 
   W22_mat[j,] = c(CC_train_spin_obj[[2]], W22(CC_train, CC_train_spin_obj[[1]]))
   print(paste('radgp_new: ', j,'th finished'))
@@ -190,16 +228,110 @@ colnames(W22_dat_new) = c('Ave.Nonzeros', 'W22')
 W22_dat_new$Method = 'RadGP'
 W22_dat = rbind(W22_dat, W22_dat_new)
 
+
+## radgp old
+# W22_mat = matrix(0,nrow=length(rho_lst),ncol=2)
+# for (j in 1:length(rho_lst)){
+#   rho = rho_lst[j]
+#   dag_rad <- radial_neighbors_dag(coords_train, rho)
+#   for (i in 2:ntrain){
+#     dag_rad$dag[[i]] = dag_rad$dag[[i]] + 1  ## C++ starts from 0 while R starts from 1
+#   }
+#   CC_train_rad_obj = cov_dag(CC_train, dag_rad$dag)
+#   # W22_mat[j,] = c(CC_train_rad_obj[[2]], W22(CC_train, CC_train_rad_obj[[1]]))
+#   W22_mat[j,] = c(mean_neighbors(dag_rad$dag), W22(CC_train, CC_train_rad_obj[[1]]))
+#   print(paste('radgp_old: ', j,'th finished'))
+# }
+# W22_dat_new = as.data.frame(W22_mat)
+# colnames(W22_dat_new) = c('Ave.Nonzeros', 'W22')
+# W22_dat_new$method = 'radgp_old'
+# W22_dat = rbind(W22_dat, W22_dat_new)
+
+
+
+
+
+
 ## plot results
 p1 = ggplot(W22_dat) +
   geom_line(aes(x=Ave.Nonzeros,y=W22,color=Method),size=1.5) +
-  theme_minimal(base_size = 25) + theme(legend.position='none') + 
-  ylab(bquote(W[2]^2)) + xlab('Precision Nonzeros')
+  theme_minimal(base_size = 25) + theme(legend.position='none') + ylab(bquote(W[2]^2)) 
 W22_dat_m = W22_dat
 W22_dat_m$logW22 = log(W22_dat_m$W22)
 p2 = ggplot(W22_dat_m) +
   geom_line(aes(x=Ave.Nonzeros,y=logW22,color=Method),size=1.5) + 
-  theme_minimal(base_size = 25) + 
-  ylab(bquote(logW[2]^2)) + xlab('Precision Nonzeros')
+  theme_minimal(base_size = 25) + ylab(bquote(logW[2]^2)) 
 plot_grid(p1, p2, align='h', nrow=1, rel_widths=c(0.45,0.55))
+
+
+
+
+
+
+
+## codes to investigate same Ave.Nonzeros behaviors
+# preci_train = ginv(CC_train)
+# 
+# rho_com = 0.07
+# dag_rad <- radial_neighbors_dag(coords_train, rho_com)
+# for (i in 2:ntrain){
+#   dag_rad$dag[[i]] = dag_rad$dag[[i]] + 1  ## C++ starts from 0 while R starts from 1
+# }
+# rad_mats = Chol_dag(CC_train, dag_rad$dag)
+# rad_preci = t(rad_mats[[1]]) %*% diag((rad_mats[[2]])^(-1)) %*% rad_mats[[1]]
+# rad_preci_F2 = sum((preci_train - rad_preci)^2)
+# rad_cov = cov_dag(CC_train, dag_rad$dag)[[1]]
+# rad_cov_F2 = sum((CC_train - rad_cov)^2)
+# # rad_W22 = W22(CC_train, rad_cov)
+# 
+# m_com = 6
+# ixmm <- GPvecchia::order_maxmin_exact(coords_train)
+# coords_mm <- coords_train[ixmm,]
+# nn_dag_mat <- GPvecchia:::findOrderedNN_kdtree2(coords_mm, m_com)
+# dag_nn = vector('list',length=ntrain)
+# for (i in 1:ntrain){
+#   neighbor_mat = nn_dag_mat[i,]
+#   dag_nn[[ixmm[i]]] = ixmm[neighbor_mat[!is.na(neighbor_mat)][-1]]
+# }
+# nn_mats = Chol_dag(CC_train, dag_nn)
+# nn_preci = t(nn_mats[[1]]) %*% diag((nn_mats[[2]])^(-1)) %*% nn_mats[[1]]
+# nn_preci_F2 = sum((preci_train - nn_preci)^2)
+# nn_cov = cov_dag(CC_train, dag_nn)[[1]]
+# nn_cov_F2 = sum((CC_train - nn_cov)^2)
+# # nn_W22 = W22(CC_train, cov_dag(CC_train, nn_cov))
+
+
+
+
+
+
+
+
+
+# ## test codes
+# library(Matrix)
+# library(radgp)
+# library(dplyr)
+# 
+# coords <- cbind(runif(400), runif(400))
+# theta <- c(1,1,1.5,0) # phi sigmasq nu nugget
+# cov_model <- 0 # 0=power exponential, [anything else]=matern
+# CC <- radgp::Correlationc(coords, coords, theta, 1, T)
+# rho <- 1
+# radgp_out <- radgp::radgp_build(coords, theta, rho, cov_model) # last input 0 for power exp, else matern
+# 
+# 
+# m <- 25
+# ixmm <- GPvecchia::order_maxmin_exact(coords)
+# coords_mm <- coords[ixmm,]
+# nn_dag_mat <- GPvecchia:::findOrderedNN_kdtree2(coords_mm, m)
+# nn_dag <- apply(nn_dag_mat, 1, function(x){ x[!is.na(x)][-1]-1 })
+# vecchia_out <- radgp::vecchiagp_build(coords_mm, theta, nn_dag, cov_model)
+
+
+
+
+
+
+
 
